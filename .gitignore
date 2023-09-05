@@ -13,3 +13,6 @@ TEMP/
 .vs_code
 .VSCode
 .vscode
+
+# MAC OS specific files
+**/.DS_Store
