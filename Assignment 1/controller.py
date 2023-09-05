@@ -112,7 +112,7 @@ class Controller(object):
             print("[controller] System sampling time not set.\n \
                   Set dt with 'set_sampling_time' method.")
 
-        # TODO: Complete the integral action update law
+        # Integral value is updated with the dt and control error
         self.i_term += self.dt * (x[0] - self.ref[0])
 
     def reset_integral(self):
@@ -157,6 +157,6 @@ class Controller(object):
         if self.use_integral is True:
             self.update_integral(x)
 
-        # TODO: Complete the control law
+        # Control law contains P and I Control
         u = - self.L @ (x - self.ref) - self.Ki * self.i_term
         return u

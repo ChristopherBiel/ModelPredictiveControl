@@ -45,17 +45,8 @@ class Astrobee(object):
         dynamics of the system.
         """
 
-        # Jacobian of exact discretization
-        Ac = ca.DM.zeros(2, 2)
-        Bc = ca.DM.zeros(2, 1)
-
-        # TODO: Complete the entries of the matrices
-        #       Ac and Bc. Note that the system mass
-        #       is available with self.mass
-
-        self.Ac = np.asarray(Ac)
+        # Add Ac and Bc matrices
         self.Ac = np.array([[0, 1],[0, 0]])
-        self.Bc = np.asarray(Bc)
         self.Bc = np.array([[0, 1/self.mass]]).T
 
         return self.Ac, self.Bc

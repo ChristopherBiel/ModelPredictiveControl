@@ -14,5 +14,9 @@ TEMP/
 .VSCode
 .vscode
 
+# Python Cache files
+**/__pycache__/
+*.py[cod]
+
 # MAC OS specific files
 **/.DS_Store
