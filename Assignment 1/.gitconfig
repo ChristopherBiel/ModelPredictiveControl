@@ -1,0 +1,15 @@
+.env
+.venv
+env/
+venv/
+VENV/
+
+# Temporary files
+TMP/
+tmp/
+TEMP/
+
+# VSCode profiles
+.vs_code
+.VSCode
+.vscode
