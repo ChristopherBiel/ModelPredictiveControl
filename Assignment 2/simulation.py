@@ -151,7 +151,7 @@ class EmbeddedSimEnvironment(object):
 
         return t, x_vec, u_vec
 
-    def visualize(self):
+    def visualize(self, figsize=(10,6)):
         """
         Offline plotting of simulation data
         """
@@ -163,7 +163,7 @@ class EmbeddedSimEnvironment(object):
         x_vec = self.x_vec
         u_vec = self.u_vec
 
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=figsize)
         if not self.sim_3d:
             ax1.clear()
             ax1.set_title("Astrobee")
@@ -224,7 +224,7 @@ class EmbeddedSimEnvironment(object):
 
         plt.show()
 
-    def visualize_error(self, x_pred=None):
+    def visualize_error(self, x_pred=None, figsize=(10,6)):
         """
         Offline plotting of simulation data
         """
@@ -236,7 +236,7 @@ class EmbeddedSimEnvironment(object):
         e_vec = self.e_vec
         u_vec = self.u_vec
 
-        fig, (ax1, ax2, ax3) = plt.subplots(3)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=figsize)
         if not self.sim_3d:
             ax1.clear()
             ax1.set_title("Trajectory Error and Control Effort")
@@ -250,11 +250,13 @@ class EmbeddedSimEnvironment(object):
             else:
                 ax1.legend(["x1", "x2"])
             ax1.set_ylabel("Position [m]")
+            ax1.grid()
 
             ax2.clear()
             ax2.plot(t, e_vec[2, :], 'r--')
             ax2.legend(["x5", "x6"])
             ax2.set_ylabel("Attitude [rad]")
+            ax2.grid()
 
             ax3.clear()
             ax3.plot(t[:-1], u_vec[0, :], 'r--')
@@ -263,6 +265,7 @@ class EmbeddedSimEnvironment(object):
             ax3.legend(["u1", "u2", "u3"])
             ax3.set_ylabel("Force input [n] / Torque [nm]")
             ax3.set_xlabel("Time [s]")
+            ax3.grid()
         else:
             ax1.clear()
             ax1.set_title("Trajectory Error and Control Effort")
@@ -271,11 +274,13 @@ class EmbeddedSimEnvironment(object):
             ax1.plot(t, e_vec[2, :], 'b--')
             ax1.legend(["x1", "x2", "x3"])
             ax1.set_ylabel("Position [m]")
+            ax1.grid()
 
             ax2.clear()
             ax2.plot(t, e_vec[3, :], 'r--')
             ax2.legend(["x5", "x6"])
             ax2.set_ylabel("Attitude [rad] ")
+            ax2.grid()
 
             ax3.clear()
             ax3.plot(t[:-1], u_vec[0, :], 'r--')
@@ -285,11 +290,12 @@ class EmbeddedSimEnvironment(object):
             ax3.legend(["u1", "u2", "u3", "u4"])
             ax3.set_ylabel("Force input [n] / Torque [nm]")
             ax3.set_xlabel("Time [s]")
+            ax3.grid()
 
         plt.show()
 
-    def visualize_prediction_vs_reference(self, x_pred, x_ref, control):
-        fig, (ax1, ax2, ax3) = plt.subplots(3)
+    def visualize_prediction_vs_reference(self, x_pred, x_ref, control, figsize=(10,6)):
+        fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=figsize)
         variables = list([self.t])
         if any(elem is None for elem in variables):
             print("Please run the simulation first with the method 'run'.")
@@ -304,12 +310,14 @@ class EmbeddedSimEnvironment(object):
         ax1.plot(t[:-1], x_ref[0, :], 'r--')
         ax1.plot(t[:-1], x_ref[1, :], 'g--')
         ax1.set_ylabel("Position [m]")
+        ax1.grid()
 
         ax2.clear()
         ax2.plot(t, x_pred[4, :], 'r')
         ax2.plot(t[:-1], x_ref[2, :], 'r--')
         ax2.legend(["x*5", "x6"])
         ax2.set_ylabel("Attitude [rad] ")
+        ax2.grid()
 
         ax3.clear()
         ax3.plot(t[:-1], u[0, :], 'r')
@@ -318,11 +326,12 @@ class EmbeddedSimEnvironment(object):
         ax3.legend(["Fx", "Fy", "Fz"])
         ax3.set_ylabel("Control")
         ax3.set_xlabel("Time [s]")
+        ax3.grid()
         plt.show()
         return
 
-    def visualize_state_vs_reference(self, state, ref, control):
-        fig, (ax1, ax2, ax3) = plt.subplots(3)
+    def visualize_state_vs_reference(self, state, ref, control, figsize=(10,6)):
+        fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=figsize)
         variables = list([self.t])
         if any(elem is None for elem in variables):
             print("Please run the simulation first with the method 'run'.")
@@ -335,13 +344,14 @@ class EmbeddedSimEnvironment(object):
         ax1.plot(t, state[1, :], 'g')
         ax1.plot(t[:-1], ref[0, :], 'r--')
         ax1.plot(t[:-1], ref[1, :], 'g--')
-
+        ax1.grid()
         ax1.set_ylabel("Position [m]")
 
         ax2.clear()
         ax2.plot(t, state[4, :], 'r')
         ax2.plot(t[:-1], ref[2, :], 'r--')
         ax2.legend(["x5", "x6"])
+        ax2.grid()
         ax2.set_ylabel("Attitude [rad] ")
 
         ax3.clear()
@@ -351,8 +361,54 @@ class EmbeddedSimEnvironment(object):
         ax3.legend(["Fx", "Fy", "Fz"])
         ax3.set_ylabel("Control")
         ax3.set_xlabel("Time [s]")
+        ax3.grid()
         plt.show()
         return
+    
+    def visualize_state_vs_reference_traj(self, state, ref, figsize=(10,6)):
+        _, ax = plt.subplots(figsize=figsize)
+        variables = list([self.t])
+        if any(elem is None for elem in variables):
+            print("Please run the simulation first with the method 'run'.")
+
+        t = self.t
+        ax.clear()
+        ax.set_title("State vs Reference - Trajectory Scatter Plot")
+        # Plot every tenth data point
+        ax.scatter(state[0, ::10], state[1, ::10], c='r', label='Bumble', marker='o', alpha=0.5)
+        ax.scatter(ref[0, ::10], ref[1, ::10], c='g', label='Honey', marker='^', alpha=0.5)
+
+        ax.grid()
+        ax.set_xlabel("Position x [m]")
+        ax.set_ylabel("Position y [m]")
+        ax.legend()
+        ax.axis('equal')
+        plt.show()
+        return
+    
+    def visualize_state_vs_reference_traj3D(self, state, ref, figsize=(8,10)):
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(projection='3d')
+        variables = list([self.t])
+        if any(elem is None for elem in variables):
+            print("Please run the simulation first with the method 'run'.")
+
+        t = self.t
+        ax.clear()
+        ax.set_title("State vs Reference - Trajectory Scatter Plot")
+        # Plot every tenth data point
+        ax.scatter(state[0, ::10], state[1, ::10],  state[2, ::10], c='r', label='Bumble', marker='o', alpha=0.5)
+        ax.scatter(ref[0, ::10], ref[1, ::10], ref[2, ::10], c='g', label='Honey', marker='^', alpha=0.5)
+
+        ax.grid()
+        ax.set_xlabel("Position x [m]")
+        ax.set_ylabel("Position y [m]")
+        ax.set_zlabel("Position z [m]")
+        ax.legend()
+        ax.axis('equal')
+        plt.show()
+        return
+
 
     def set_window(self, window):
         """

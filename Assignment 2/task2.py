@@ -9,15 +9,9 @@ bumble = Astrobee()
 
 # Get the system discrete-time dynamics
 A, B = bumble.cartesian_ground_dynamics()
-print(A)
-print(B)
 
 Ad, Bd, Cd, Dd = bumble.casadi_c2d(A, B, np.eye(6), np.zeros((6, 3)))
 bumble.set_discrete_dynamics(Ad, Bd)
-print(Ad)
-print(Bd)
-
-exit()
 
 # Get controller
 R = np.eye(3) * 10
@@ -47,14 +41,17 @@ t, y, u = sim_env.run(x0, x_ref=x_full_ref)
 sim_env.visualize_error()
 # NOTE: You can further observe what the prediction for the solver is, versus the actual state
 # sim_env.visualize_prediction_vs_reference(x_pred=x_star, x_ref=x_full_ref, control=u_star)
-# sim_env.visualize_state_vs_reference(state=y, ref=x_full_ref, control=u_star)
+#sim_env.visualize_state_vs_reference(state=y, ref=x_full_ref, control=u_star)
+sim_env.visualize_state_vs_reference_traj(state=y, ref=x_full_ref)
 
 # Activate broken thruster and re-run
 sim_env.broken_thruster()
 t, y, u = sim_env.run(x0, x_ref=x_full_ref)
 sim_env.visualize_error()
+sim_env.visualize_state_vs_reference_traj(state=y, ref=x_full_ref)
 
-# Get the system discrete-time dynamics with Z
+
+# Get the system discrete-time dynamics with ZV
 queen = Astrobee(axis="3d")
 A, B = queen.cartesian_3d_dynamics()
 Ad, Bd, Cd, Dd = queen.casadi_c2d(A, B, np.eye(8), np.zeros((8, 4)))
@@ -80,3 +77,4 @@ sim_env = EmbeddedSimEnvironment(model=queen,
                                  time=40.0)
 t, y, u = sim_env.run(x0, x_ref=x_full_ref)
 sim_env.visualize_error()
+sim_env.visualize_state_vs_reference_traj3D(state=y, ref=x_full_ref)
