@@ -101,7 +101,7 @@ class EmbeddedSimEnvironment(object):
 
         return t, x_vec, u_vec
 
-    def visualize(self):
+    def visualize(self, title='', figsize=(8,8)):
         """
         Offline plotting of simulation data
         """
@@ -114,9 +114,12 @@ class EmbeddedSimEnvironment(object):
         x_vec = self.x_vec
         u_vec = self.u_vec
 
-        fig, (ax1, ax2, ax3) = plt.subplots(3)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=figsize)
         ax1.clear()
-        ax1.set_title("Astrobee")
+        if title == '':
+            ax1.set_title("Astrobee")
+        else:
+            ax1.set_title(title)
         ax1.plot(t, x_vec[0, :], 'r--')
         ax1.legend(["x1"])
         ax1.set_ylabel("Position [m]")

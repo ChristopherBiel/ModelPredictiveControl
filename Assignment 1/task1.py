@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as  plt
 
 from astrobee_1d import Astrobee
 from controller import Controller
@@ -37,7 +38,7 @@ sim_env = EmbeddedSimEnvironment(model=abee,
                                  controller=ctl.control_law,
                                  time=40.0)
 t, y, u = sim_env.run(x0)
-sim_env.visualize()
+sim_env.visualize(title='Astrobee 1D dynamics - No Disturbance Behaviour')
 
 # Disturbance effect
 abee.set_disturbance()
@@ -46,9 +47,9 @@ sim_env = EmbeddedSimEnvironment(model=abee,
                                  controller=ctl.control_law,
                                  time=40.0)
 t, y, u = sim_env.run(x0)
-sim_env.visualize()
+sim_env.visualize(title='Astrobee 1D dynamics - With Disturbance, No I-Control')
 
 # Activate feed-forward gain
 ctl.activate_integral_action(dt=0.1, ki=0.03)
 t, y, u = sim_env.run(x0)
-sim_env.visualize()
+sim_env.visualize(title='Astrobee 1D dynamics - With Disturbance, With I-Control')
