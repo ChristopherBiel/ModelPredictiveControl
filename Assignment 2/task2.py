@@ -12,6 +12,8 @@ A, B = bumble.cartesian_ground_dynamics()
 
 Ad, Bd, Cd, Dd = bumble.casadi_c2d(A, B, np.eye(6), np.zeros((6, 3)))
 bumble.set_discrete_dynamics(Ad, Bd)
+print(f"Discrete A matrix from casadi_c2d: {Ad}")
+print(f"Discrete B matrix from casadi_c2d: {Bd}")
 
 # Get controller
 R = np.eye(3) * 10
