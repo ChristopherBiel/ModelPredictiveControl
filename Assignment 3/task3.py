@@ -39,7 +39,7 @@ print(E)
 print(V)
 print(V.T @ Bd)
 
-
+# Define coefficients
 R_coefficients = np.ones(6)
 Q_coefficients = np.ones(12)
 
