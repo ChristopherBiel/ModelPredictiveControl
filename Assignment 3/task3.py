@@ -25,6 +25,9 @@ C = np.diag(np.ones(12))
 D = np.zeros((12, 6))
 
 Ad, Bd, Cd, Dd = abee.casadi_c2d(A, B, C, D)
+print(f"Linearized discrete system dynamics in the ref. point:")
+print(Ad)
+print(Bd)
 
 ctl = DLQR(Ad, Bd, C)
 abee.set_discrete_dynamics(Ad, Bd)
@@ -33,10 +36,9 @@ abee.set_discrete_dynamics(Ad, Bd)
 #       corresponding to an eigenvalue not inside the unit circle, v @ Bd != 0
 E, V = np.linalg.eig(Ad.T)
 print(E)
+print(V)
 print(V.T @ Bd)
 
-
-exit()
 
 R_coefficients = np.ones(6)
 Q_coefficients = np.ones(12)
@@ -68,6 +70,8 @@ x0 = np.zeros((12, 1))
 
 t, y, u = sim_env.run(x0)
 sim_env.evaluate_performance(t, y, u)
+
+exit()
 
 # ------------------------------
 # Part II - LQG Design
