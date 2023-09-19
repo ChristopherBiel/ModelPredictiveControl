@@ -42,7 +42,7 @@ class EmbeddedSimEnvironment(object):
         u_vec = np.empty((6, 0))
 
         # Start figure
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(10,6))
         for i in range(sim_loop_length):
 
             if self.estimation_in_the_loop is False:
@@ -94,6 +94,7 @@ class EmbeddedSimEnvironment(object):
                  t[l_wnd:], x_vec[2, l_wnd:], 'g--',)
         ax1.legend(["x1", "x2", "x3"])
         ax1.set_ylabel("Position [m]")
+        ax1.grid()
 
         ax2.clear()
         ax2.plot(t[l_wnd:], x_vec[3, l_wnd:], 'r--',
@@ -101,6 +102,7 @@ class EmbeddedSimEnvironment(object):
                  t[l_wnd:], x_vec[5, l_wnd:], 'b--')
         ax2.legend(["x4", "x4", "x5"])
         ax2.set_ylabel("Velocity [m/s]")
+        ax2.grid()
 
         ax3.clear()
         ax3.plot(t[l_wnd:], x_vec[6, l_wnd:], 'r--',
@@ -108,6 +110,7 @@ class EmbeddedSimEnvironment(object):
                  t[l_wnd:], x_vec[8, l_wnd:], 'b--')
         ax3.legend(["x6", "x7", "x8"])
         ax3.set_ylabel("Attitude [rad]")
+        ax3.grid()
 
         ax4.clear()
         ax4.plot(t[l_wnd:], x_vec[9, l_wnd:], 'r--',
@@ -115,6 +118,7 @@ class EmbeddedSimEnvironment(object):
                  t[l_wnd:], x_vec[11, l_wnd:], 'b--')
         ax4.legend(["x9", "x10", "x11"])
         ax4.set_ylabel("Angular Velocity")
+        ax4.grid()
 
         plt.show()
         return t, x_vec, u_vec
