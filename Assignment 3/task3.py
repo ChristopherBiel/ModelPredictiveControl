@@ -25,31 +25,27 @@ C = np.diag(np.ones(12))
 D = np.zeros((12, 6))
 
 Ad, Bd, Cd, Dd = abee.casadi_c2d(A, B, C, D)
-print(f"Linearized discrete system dynamics in the ref. point:")
-print(Ad)
-print(Bd)
+#print(f"Linearized discrete system dynamics in the ref. point:")
+#print(Ad)
+#print(Bd)
 
 ctl = DLQR(Ad, Bd, C)
 abee.set_discrete_dynamics(Ad, Bd)
 
 # TODO: Check eigenvalues, and verify that for each left eigenvector v of Ad
 #       corresponding to an eigenvalue not inside the unit circle, v @ Bd != 0
-E, V = np.linalg.eig(Ad.T)
-print(E)
-print(V)
-print(V.T @ Bd)
+#E, V = np.linalg.eig(Ad.T)
+#print(E)
+#print(V.T @ Bd)
 
 
 R_coefficients = np.ones(6)
 Q_coefficients = np.ones(12)
 
 # TODO: uncomment the code below to adjust the coefficients of Q and R
-# Q_coefficients[0:3] = 0
-# Q_coefficients[3:6] = 0
-# Q_coefficients[6:9] = 0
-# Q_coefficients[9:12] = 0
-# R_coefficients[0:3] = 0
-# R_coefficients[3:6] = 0
+Q_coefficients = [4, 55, 80, 32, 32, 32, 3, 3, 3, 1, 1, 1]
+R_coefficients = [7, 92, 56, 18, 18, 18]
+# Alternative: Q_c [ 7. 70. 48. 38. 38. 38.  3.  3.  3.  1.  1.  1.] R_c [12. 24. 39. 17. 17. 17.]
 
 Q = np.diag(Q_coefficients)
 R = np.diag(R_coefficients)
@@ -68,7 +64,7 @@ sim_env = EmbeddedSimEnvironment(model=abee,
 # Starting pose
 x0 = np.zeros((12, 1))
 
-t, y, u = sim_env.run(x0)
+t, y, u = sim_env.run(x0, plot=True)
 sim_env.evaluate_performance(t, y, u)
 
 exit()

@@ -30,19 +30,20 @@ class EmbeddedSimEnvironment(object):
         # Plotting definitions
         self.plt_window = float("inf")    # running plot window, in seconds, or float("inf")
 
-    def run(self, x0):
+    def run(self, x0, plot=True):
         """
         Run simulator with specified system dynamics and control function.
         """
 
-        print("Running simulation....")
+        #print("Running simulation....")
         sim_loop_length = int(self.total_sim_time / self.dt) + 1  # account for 0th
         t = np.array([0])
         x_vec = np.array([x0]).reshape(12, 1)
         u_vec = np.empty((6, 0))
 
         # Start figure
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(10,6))
+        if plot:
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(10,6))
         for i in range(sim_loop_length):
 
             if self.estimation_in_the_loop is False:
@@ -86,41 +87,41 @@ class EmbeddedSimEnvironment(object):
                 l_wnd = 0 if int(i + 1 - self.plt_window / self.dt) < 1 else int(i + 1 - self.plt_window / self.dt)
             else:
                 l_wnd = 0
+        if plot:
+            ax1.clear()
+            ax1.set_title("Astrobee")
+            ax1.plot(t[l_wnd:], x_vec[0, l_wnd:], 'r--',
+                     t[l_wnd:], x_vec[1, l_wnd:], 'b--',
+                     t[l_wnd:], x_vec[2, l_wnd:], 'g--',)
+            ax1.legend(["x1", "x2", "x3"])
+            ax1.set_ylabel("Position [m]")
+            ax1.grid()
 
-        ax1.clear()
-        ax1.set_title("Astrobee")
-        ax1.plot(t[l_wnd:], x_vec[0, l_wnd:], 'r--',
-                 t[l_wnd:], x_vec[1, l_wnd:], 'b--',
-                 t[l_wnd:], x_vec[2, l_wnd:], 'g--',)
-        ax1.legend(["x1", "x2", "x3"])
-        ax1.set_ylabel("Position [m]")
-        ax1.grid()
+            ax2.clear()
+            ax2.plot(t[l_wnd:], x_vec[3, l_wnd:], 'r--',
+                     t[l_wnd:], x_vec[4, l_wnd:], 'g--',
+                     t[l_wnd:], x_vec[5, l_wnd:], 'b--')
+            ax2.legend(["x4", "x4", "x5"])
+            ax2.set_ylabel("Velocity [m/s]")
+            ax2.grid()
 
-        ax2.clear()
-        ax2.plot(t[l_wnd:], x_vec[3, l_wnd:], 'r--',
-                 t[l_wnd:], x_vec[4, l_wnd:], 'g--',
-                 t[l_wnd:], x_vec[5, l_wnd:], 'b--')
-        ax2.legend(["x4", "x4", "x5"])
-        ax2.set_ylabel("Velocity [m/s]")
-        ax2.grid()
+            ax3.clear()
+            ax3.plot(t[l_wnd:], x_vec[6, l_wnd:], 'r--',
+                     t[l_wnd:], x_vec[7, l_wnd:], 'g--',
+                     t[l_wnd:], x_vec[8, l_wnd:], 'b--')
+            ax3.legend(["x6", "x7", "x8"])
+            ax3.set_ylabel("Attitude [rad]")
+            ax3.grid()
 
-        ax3.clear()
-        ax3.plot(t[l_wnd:], x_vec[6, l_wnd:], 'r--',
-                 t[l_wnd:], x_vec[7, l_wnd:], 'g--',
-                 t[l_wnd:], x_vec[8, l_wnd:], 'b--')
-        ax3.legend(["x6", "x7", "x8"])
-        ax3.set_ylabel("Attitude [rad]")
-        ax3.grid()
+            ax4.clear()
+            ax4.plot(t[l_wnd:], x_vec[9, l_wnd:], 'r--',
+                     t[l_wnd:], x_vec[10, l_wnd:], 'g--',
+                     t[l_wnd:], x_vec[11, l_wnd:], 'b--')
+            ax4.legend(["x9", "x10", "x11"])
+            ax4.set_ylabel("Angular Velocity")
+            ax4.grid()
 
-        ax4.clear()
-        ax4.plot(t[l_wnd:], x_vec[9, l_wnd:], 'r--',
-                 t[l_wnd:], x_vec[10, l_wnd:], 'g--',
-                 t[l_wnd:], x_vec[11, l_wnd:], 'b--')
-        ax4.legend(["x9", "x10", "x11"])
-        ax4.set_ylabel("Angular Velocity")
-        ax4.grid()
-
-        plt.show()
+            plt.show()
         return t, x_vec, u_vec
 
     def set_window(self, window):
@@ -169,22 +170,65 @@ class EmbeddedSimEnvironment(object):
                 if current_spd > max_spd:
                     max_spd = current_spd
 
-        print('Max distance to reference:')
+        print('Max distance to reference:       Target < 0.06 m')
         print('   ', max_dist)
-        print('Max speed:')
+        print('Max speed:                       Target < 0.03 m/s')
         print('   ', max_spd)
 
-        print('Max forces:')
+        print('Max overshoot:                   Target < 0.02 m')
+        print('   x: ', max(y[0, 121:] - 1))
+        print('   y: ', max(y[1, 121:] - 0.5))
+        print('   z: ', max(y[2, 121:] - 0.1))
+
+        print('Max forces:                      Target < 0.85 N')
         print('   x: ', max(abs(u[0, :])))
         print('   y: ', max(abs(u[1, :])))
         print('   z: ', max(abs(u[2, :])))
 
-        print('Max torques:')
+        print('Max torques:                     Target < 0.04 Nm')
         print('   x: ', max(abs(u[3, :])))
         print('   y: ', max(abs(u[4, :])))
         print('   z: ', max(abs(u[5, :])))
 
-        print('Max Euler angle deviations:')
+        print('Max Euler angle deviations:      Target < 10-7 rad')
         print('   roll: ', max(abs(y[6, 121:] - 0.087)))
         print('   pitch: ', max(abs(y[7, 121:] - 0.077)))
         print('   yaw: ', max(abs(y[8, 121:] - 0.067)))
+
+    def eval_perf(self, t, y, u):
+        '''
+        Evaluate the performance of a simulated controller.
+        Returns True if all performance criteria are met.
+        '''
+
+        max_dist = 0
+        max_spd = 0
+        flag = True
+
+        for timestep in t:
+            if timestep >= 12:
+                i = np.where(t == timestep)
+                current_dist = np.linalg.norm(y[:3, i] - np.array([[[1, 0.5, 0.1]]]).T)
+                current_spd = np.linalg.norm(y[3:6, i])
+                if current_dist > max_dist:
+                    max_dist = current_dist
+                if current_spd > max_spd:
+                    max_spd = current_spd
+
+
+        # Check for x and y speed limits
+        if max_dist > 0.06: flag = False
+        if max_spd > 0.03: flag = False
+        # Check for overshoot in position
+        if max(y[0,121:] - 1) > 0.02: flag = False
+        if max(y[1,121:] - 0.5) > 0.02: flag = False
+        if max(y[2,121:] - 0.1) > 0.02: flag = False
+        # Check for maximum input limits
+        if max([max(abs(u[0, :])), max(abs(u[1, :])), max(abs(u[2, :]))]) > 0.85: flag = False
+        if max([max(abs(u[3, :])), max(abs(u[4, :])), max(abs(u[5, :]))]) > 0.04: flag = False
+        # Check for maximum orientation error
+        if max(abs(y[6, 121:] - 0.087)) > 1e-7: flag = False
+        if max(abs(y[7, 121:] - 0.077)) > 1e-7: flag = False
+        if max(abs(y[8, 121:] - 0.067)) > 1e-7: flag = False
+
+        return flag
