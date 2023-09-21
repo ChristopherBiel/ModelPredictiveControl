@@ -60,7 +60,7 @@ class EmbeddedSimEnvironment(object):
                 x = x_vec[:, -1].reshape(12, 1)
 
                 # Get measurement
-                measurement_noise = np.random.uniform(-0.005, 0.005, (3, 1))
+                measurement_noise = np.random.uniform(-0.1, 0.1, (3, 1))
                 y = self.model.C_KF @ x[0:6, :].reshape(6, 1) + measurement_noise
 
                 # Estimate the velocity from noisy position measurements
@@ -276,4 +276,33 @@ class EmbeddedSimEnvironment(object):
         ax.legend()
 
         # Show the 3D plot
+        plt.show()
+
+    def plotPositionSubsystem(self, t, y, u):
+        ''''''
+        _, (ax1, ax2, ax3) = plt.subplots(3, figsize=(10,6))
+        ax1.clear()
+        ax1.set_title("Astrobee")
+        ax1.plot(t, y[0, :], 'r--',
+                 t, y[1, :], 'b--',
+                 t, y[2, :], 'g--',)
+        ax1.legend(["p_x", "p_y", "p_z"])
+        ax1.set_ylabel("Position [m]")
+        ax1.grid()
+
+        ax2.clear()
+        ax2.plot(t, y[3, :], 'r--',
+                 t, y[4, :], 'g--',
+                 t, y[5, :], 'b--')
+        ax2.legend(["v_x", "v_y", "v_z"])
+        ax2.set_ylabel("Velocity [m/s]")
+        ax2.grid()
+
+        ax3.clear()
+        ax3.plot(t[:-1], u[0, :], 'r--',
+                 t[:-1], u[1, :], 'g--',
+                 t[:-1], u[2, :], 'b--')
+        ax3.legend(["F_x", "F_y", "F_z"])
+        ax3.set_ylabel("Force [N]")
+        ax3.grid()
         plt.show()

@@ -63,11 +63,9 @@ sim_env = EmbeddedSimEnvironment(model=abee,
 # Starting pose
 x0 = np.zeros((12, 1))
 
-t, y, u = sim_env.run(x0, plot=True)
-sim_env.evaluate_performance(t, y, u)
-sim_env.plot3DTrajectory(t, y)
-
-exit()
+t, y, u = sim_env.run(x0, plot=False)
+#sim_env.evaluate_performance(t, y, u)
+#sim_env.plot3DTrajectory(t, y)
 
 # ------------------------------
 # Part II - LQG Design
@@ -79,8 +77,8 @@ C = np.hstack((C, np.zeros((3, 3))))
 
 # Create the matrices for Qn and Rn
 # TODO: adjust the values of Qn and Rn to answer Q4 and Q5 - they start at 0
-Q_diag = np.vstack((np.ones((3, 1)) * 0, np.zeros((3, 1))))
-R_diag = np.vstack((np.ones((3, 1)) * 0))
+Q_diag = np.vstack((np.ones((3, 1)) * 1, np.zeros((3, 1))))
+R_diag = np.vstack((np.ones((3, 1)) * 1))
 Qn = np.diag(Q_diag.reshape(6, ))
 Rn = np.diag(R_diag.reshape(3, ))
 
@@ -92,4 +90,6 @@ sim_env_lqg = EmbeddedSimEnvironment(model=abee,
                                      controller=ctl.feedback,
                                      time=20)
 sim_env_lqg.set_estimator(True)
-t, y, u = sim_env_lqg.run(x0)
+t, y, u = sim_env_lqg.run(x0, plot=False)
+sim_env.evaluate_performance(t, y, u)
+sim_env.plotPositionSubsystem(t, y, u)
