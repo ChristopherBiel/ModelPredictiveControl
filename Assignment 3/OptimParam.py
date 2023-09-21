@@ -15,7 +15,7 @@ def runSim(Q_c, R_c, ctl, abee, x0):
                                      controller=ctl.feedback,
                                      time=20)
     t, y, u = sim_env.run(x0, plot=False)
-    #sim_env.evaluate_performance(t, y, u)
+
     return sim_env.eval_perf(t, y, u)
 
 
@@ -71,16 +71,17 @@ ctl.set_reference(x_star)
 #             print(f"After {elapsed}s, estimate total is {full/60/60}h")
 
 # Random Search
+lowest_cost = 100
+config = [Q_c, R_c]
 for i in range(10000000):
-    Q_c[0:3] = np.random.randint(1, 200, 3)
-    Q_c[3:6] = np.random.randint(1, 100)
-    Q_c[6:9] = np.random.randint(1, 20)
-    Q_c[9:12] = np.random.randint(1, 10)
-    R_c[0:3] = np.random.randint(1, 200, 3)
-    R_c[3:6] = np.random.randint(1, 50)
-
-    if runSim(Q_c, R_c, ctl, abee, x0):
-        print(f'DONE! Found valid configuration: Q_c {Q_c} R_c {R_c}')
-        break
-    if np.mod(i, 10000) == 0:
-        print(f'Running config {i/1000}k')
+    Q_c[0:3] = np.random.randint(1, 300, 3)
+    Q_c[3:6] = np.random.randint(1, 200, 3)
+    Q_c[6:9] = np.random.randint(1, 50)
+    Q_c[9:12] = np.random.randint(1, 30)
+    R_c[0:3] = np.random.randint(1, 300, 3)
+    R_c[3:6] = np.random.randint(1, 200)
+    curr_cost = runSim(Q_c, R_c, ctl, abee, x0)
+    if curr_cost < lowest_cost:
+        config = [Q_c, R_c]
+        lowest_cost = curr_cost
+        print(f'At {i}: New lowest cost {lowest_cost} with Q_c: {Q_c}, R_c: {R_c}')

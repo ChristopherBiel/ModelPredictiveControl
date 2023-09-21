@@ -43,9 +43,8 @@ R_coefficients = np.ones(6)
 Q_coefficients = np.ones(12)
 
 # TODO: uncomment the code below to adjust the coefficients of Q and R
-Q_coefficients = [4, 55, 80, 32, 32, 32, 3, 3, 3, 1, 1, 1]
-R_coefficients = [7, 92, 56, 18, 18, 18]
-# Alternative: Q_c [ 7. 70. 48. 38. 38. 38.  3.  3.  3.  1.  1.  1.] R_c [12. 24. 39. 17. 17. 17.]
+Q_coefficients = [34, 78, 283, 171, 179, 161, 48, 48, 48, 3, 3, 3]
+R_coefficients = [49, 90, 31, 191, 191, 191]
 
 Q = np.diag(Q_coefficients)
 R = np.diag(R_coefficients)
@@ -66,6 +65,7 @@ x0 = np.zeros((12, 1))
 
 t, y, u = sim_env.run(x0, plot=True)
 sim_env.evaluate_performance(t, y, u)
+sim_env.plot3DTrajectory(t, y)
 
 exit()
 

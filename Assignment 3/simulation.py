@@ -2,6 +2,7 @@ import numpy as np
 import casadi as ca
 import matplotlib.pyplot as plt
 import time
+from util import r_mat
 
 
 class EmbeddedSimEnvironment(object):
@@ -197,8 +198,7 @@ class EmbeddedSimEnvironment(object):
 
     def eval_perf(self, t, y, u):
         '''
-        Evaluate the performance of a simulated controller.
-        Returns True if all performance criteria are met.
+        Return a performance measure to optimize the parameters.
         '''
 
         max_dist = 0
@@ -231,4 +231,49 @@ class EmbeddedSimEnvironment(object):
         if max(abs(y[7, 121:] - 0.077)) > 1e-7: flag = False
         if max(abs(y[8, 121:] - 0.067)) > 1e-7: flag = False
 
-        return flag
+        if flag:
+            return 2*max_dist + max(y[0,121:] - 1) + max(y[1,121:] - 0.5) + max(y[2,121:] - 0.1)
+        return 100
+    
+    def plot3DTrajectory(self, t, y):
+        '''
+        Create a 3D scatter plot to visualize the trajectory of the Astrobee.
+        '''
+
+        # Create the figure and add a 3d axis
+        fig = plt.figure(figsize=(8,8))
+        ax = fig.add_subplot(111, projection='3d')
+        arrow_length = 0.06
+
+        # Extract the individual states
+        p = y[0:3, :]
+        e = y[6:9, :]
+        euler = ca.MX.sym('euler', 3, 1)
+
+        # Plot the data
+        ax.scatter(p[0,::10], p[1,::10], p[2,::10], s=3, c='b', marker='o', label='Astrobee')
+        indices = np.arange(0, p.shape[1],10)
+        for i in indices:
+            # Calculate the vector in global coordinates using the R-matrix
+            R = r_mat(e[:,i])
+            dp = ca.mtimes(R,euler)
+            f_xd = ca.Function('f_xd', [euler], [dp])
+            vector = f_xd(np.array([[arrow_length, 0, 0]]).T)
+            q = ax.quiver(p[0,i], p[1,i], p[2,i], vector[0,0], vector[1,0], vector[2,0], color='red', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+            vector = f_xd(np.array([[0, arrow_length, 0]]).T)
+            q = ax.quiver(p[0,i], p[1,i], p[2,i], vector[0,0], vector[1,0], vector[2,0], color='green', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+            vector = f_xd(np.array([[0, 0, arrow_length]]).T)
+            q = ax.quiver(p[0,i], p[1,i], p[2,i], vector[0,0], vector[1,0], vector[2,0], color='blue', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+        ax.axis('equal')
+        
+        # Set axis labels
+        ax.set_xlabel('X position [m]')
+        ax.set_ylabel('Y position [m]')
+        ax.set_zlabel('Z position [m]')
+        ax.set_title('Astrobee position and orientation in the global coordinate frame')
+        
+        # Add a legend
+        ax.legend()
+
+        # Show the 3D plot
+        plt.show()
