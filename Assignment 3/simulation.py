@@ -215,7 +215,6 @@ class EmbeddedSimEnvironment(object):
                 if current_spd > max_spd:
                     max_spd = current_spd
 
-
         # Check for x and y speed limits
         if max_dist > 0.06: flag = False
         if max_spd > 0.03: flag = False
@@ -231,7 +230,9 @@ class EmbeddedSimEnvironment(object):
         if max(abs(y[7, 121:] - 0.077)) > 1e-7: flag = False
         if max(abs(y[8, 121:] - 0.067)) > 1e-7: flag = False
 
+        # If the system adheres to all constraints, the performance is returned as a cost
         if flag:
+            # Return a 'cost' function of key performance indicators (KPI)
             return 2*max_dist + max(y[0,121:] - 1) + max(y[1,121:] - 0.5) + max(y[2,121:] - 0.1)
         return 100
     
@@ -279,7 +280,9 @@ class EmbeddedSimEnvironment(object):
         plt.show()
 
     def plotPositionSubsystem(self, t, y, u):
-        ''''''
+        '''
+        Plot the position, velocity and force inputs of the astrobee.
+        '''
         _, (ax1, ax2, ax3) = plt.subplots(3, figsize=(10,6))
         ax1.clear()
         ax1.set_title("Astrobee")

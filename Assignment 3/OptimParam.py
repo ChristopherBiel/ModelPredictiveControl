@@ -6,7 +6,19 @@ from simulation import EmbeddedSimEnvironment
 
 import time
 
+# This script performs hyperparameter optimization
+# by using random search for specific values of Q_c and R_c
+# Automatic evaluation then allows for selection of
+# the best performing configurations
+
 def runSim(Q_c, R_c, ctl, abee, x0):
+    '''
+    Helper function to run and evaluate a single combination of
+    R_c and Q_c. We have to createt a new SimEnvironment, since
+    the parameters of the LQR are not adapted when re-executing
+    get_lqr_gain for an existing SimEnv
+    '''
+
     Q = np.diag(Q_c)
     R = np.diag(R_c)
     ctl.get_lqr_gain(Q, R)
@@ -17,8 +29,6 @@ def runSim(Q_c, R_c, ctl, abee, x0):
     t, y, u = sim_env.run(x0, plot=False)
 
     return sim_env.eval_perf(t, y, u)
-
-
 
 # Init system
 abee = Astrobee(h=0.1)
@@ -48,32 +58,16 @@ Q_c = np.ones(12)
 coeff = [i*i for i in np.linspace(1,9,8)]
 ctl.set_reference(x_star)
 
-# Grid Search
-# for k01 in range(len(coeff)):
-#     Q_c[0:3] = coeff[k01]
-#     for k02 in range(len(coeff)):
-#         Q_c[3:6] = coeff[k02]
-#         for k03 in range(len(coeff)):
-#             print(f'Loops at {k01}, {k02}, {k03}')
-#             start = time.time()
-#             Q_c[6:9] = coeff[k03]
-#             for k04 in range(len(coeff)):
-#                 Q_c[9:12] = coeff[k04]
-#                 for k05 in range(len(coeff)):
-#                     R_c[0:3] = coeff[k05]
-#                     for k06 in range(len(coeff)):
-#                         R_c[3:6] = coeff[k06]
-#                         if runSim(Q_c, R_c, ctl, sim_env, x0): 
-#                             print(f'DONE with: Q_c {Q_c} R_c {R_c}')
-#             stop = time.time()
-#             elapsed = stop - start
-#             full = elapsed * len(coeff) * len(coeff) * len(coeff)
-#             print(f"After {elapsed}s, estimate total is {full/60/60}h")
-
-# Random Search
+# Grid search is a possibility, but usually has inferior performance
+# when compared to Random Search
 lowest_cost = 100
 config = [Q_c, R_c]
+# The script is supposed to run 'forever' (approx. 12h on my hardware)
+# but can be stopped at any time
+# The user can then use the latest result as read from the terminal
 for i in range(10000000):
+    # The min/max values for the random distribution were chosen based
+    # on manual testing and the first test results of the random search
     Q_c[0:3] = np.random.randint(1, 300, 3)
     Q_c[3:6] = np.random.randint(1, 200, 3)
     Q_c[6:9] = np.random.randint(1, 50)

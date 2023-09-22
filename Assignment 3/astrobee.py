@@ -207,7 +207,7 @@ class Astrobee(object):
             return np.zeros(x.shape[0])
 
         if self.kf_activated:
-            wp = np.random.uniform(-0.1, 0.1, (3, 1))
+            wp = np.random.uniform(-0.01, 0.01, (3, 1))
             w = np.vstack((wp, np.zeros((9, 1))))
         else:
             w = np.zeros((12, 1))
