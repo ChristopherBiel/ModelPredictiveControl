@@ -25,31 +25,26 @@ C = np.diag(np.ones(12))
 D = np.zeros((12, 6))
 
 Ad, Bd, Cd, Dd = abee.casadi_c2d(A, B, C, D)
-print(f"Linearized discrete system dynamics in the ref. point:")
-print(Ad)
-print(Bd)
+#print(f"Linearized discrete system dynamics in the ref. point:")
+#print(Ad)
+#print(Bd)
 
 ctl = DLQR(Ad, Bd, C)
 abee.set_discrete_dynamics(Ad, Bd)
 
 # TODO: Check eigenvalues, and verify that for each left eigenvector v of Ad
 #       corresponding to an eigenvalue not inside the unit circle, v @ Bd != 0
-E, V = np.linalg.eig(Ad.T)
-print(E)
-print(V)
-print(V.T @ Bd)
+#E, V = np.linalg.eig(Ad.T)
+#print(E)
+#print(V.T @ Bd)
 
 # Define coefficients
 R_coefficients = np.ones(6)
 Q_coefficients = np.ones(12)
 
 # TODO: uncomment the code below to adjust the coefficients of Q and R
-# Q_coefficients[0:3] = 0
-# Q_coefficients[3:6] = 0
-# Q_coefficients[6:9] = 0
-# Q_coefficients[9:12] = 0
-# R_coefficients[0:3] = 0
-# R_coefficients[3:6] = 0
+Q_coefficients = [34, 78, 283, 171, 179, 161, 48, 48, 48, 3, 3, 3]
+R_coefficients = [49, 90, 31, 191, 191, 191]
 
 Q = np.diag(Q_coefficients)
 R = np.diag(R_coefficients)
@@ -68,10 +63,9 @@ sim_env = EmbeddedSimEnvironment(model=abee,
 # Starting pose
 x0 = np.zeros((12, 1))
 
-t, y, u = sim_env.run(x0)
+t, y, u = sim_env.run(x0, plot=True)
 sim_env.evaluate_performance(t, y, u)
-
-exit()
+sim_env.plot3DTrajectory(t, y)
 
 # ------------------------------
 # Part II - LQG Design
@@ -83,8 +77,8 @@ C = np.hstack((C, np.zeros((3, 3))))
 
 # Create the matrices for Qn and Rn
 # TODO: adjust the values of Qn and Rn to answer Q4 and Q5 - they start at 0
-Q_diag = np.vstack((np.ones((3, 1)) * 0, np.zeros((3, 1))))
-R_diag = np.vstack((np.ones((3, 1)) * 0))
+Q_diag = np.vstack((np.ones((3, 1)) * 0.01, np.zeros((3, 1))))
+R_diag = np.vstack((np.ones((3, 1)) * 0.01))
 Qn = np.diag(Q_diag.reshape(6, ))
 Rn = np.diag(R_diag.reshape(3, ))
 
@@ -96,4 +90,6 @@ sim_env_lqg = EmbeddedSimEnvironment(model=abee,
                                      controller=ctl.feedback,
                                      time=20)
 sim_env_lqg.set_estimator(True)
-t, y, u = sim_env_lqg.run(x0)
+t, y, u = sim_env_lqg.run(x0, plot=False)
+sim_env.evaluate_performance(t, y, u)
+sim_env.plotPositionSubsystem(t, y, u)

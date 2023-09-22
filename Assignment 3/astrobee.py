@@ -207,7 +207,7 @@ class Astrobee(object):
             return np.zeros(x.shape[0])
 
         if self.kf_activated:
-            wp = np.random.uniform(-0.005, 0.005, (3, 1))
+            wp = np.random.uniform(-0.01, 0.01, (3, 1))
             w = np.vstack((wp, np.zeros((9, 1))))
         else:
             w = np.zeros((12, 1))
@@ -255,4 +255,4 @@ class Astrobee(object):
         self.kf_estimator.x = x
 
         # TODO: Uncomment the line below for process noise
-        # self.kf_activated = True
+        self.kf_activated = True
