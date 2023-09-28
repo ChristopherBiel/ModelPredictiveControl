@@ -62,7 +62,7 @@ class MPC(object):
         self.dt = model.dt
         self.Nx, self.Nu = model.n, model.m
         self.Nt = N
-        print("Horizon steps: ", N * self.dt)
+        # print("Horizon steps: ", N * self.dt)
         self.dynamics = dynamics
 
         # Initialize variables
@@ -88,8 +88,7 @@ class MPC(object):
         # Starting state parameters - add slack here
         x0 = ca.MX.sym('x0', self.Nx)
         if self.trajectory_tracking:
-            # TODO: remove 'raise NotImplementedError' and create the desired symbolic param
-            raise NotImplementedError
+            x_ref = ca.MX.sym('x_ref', self.Nx*(self.Nt+1))
         else:
             x_ref = ca.MX.sym('x_ref', self.Nx,)
         u0 = ca.MX.sym('u0', self.Nu)
@@ -120,8 +119,7 @@ class MPC(object):
             # Get variables
             x_t = opt_var['x', t]
             if self.trajectory_tracking:
-                # TODO: remove 'raise NotImplementedError' and obtain the desired step in the reference trajectory
-                raise NotImplementedError
+                x_r = x_ref[t*13:(t+1)*13]
             else:
                 x_r = x_ref
             u_t = opt_var['u', t]
@@ -194,12 +192,12 @@ class MPC(object):
         self.solver = ca.nlpsol('mpc_solver', 'ipopt', nlp, options)
 
         build_solver_time += time.time()
-        print('\n________________________________________')
-        print('# Time to build mpc solver: %f sec' % build_solver_time)
-        print('# Number of variables: %d' % self.num_var)
-        print('# Number of equality constraints: %d' % num_eq_con)
-        print('# Number of inequality constraints: %d' % num_ineq_con)
-        print('----------------------------------------')
+        # print('\n________________________________________')
+        # print('# Time to build mpc solver: %f sec' % build_solver_time)
+        # print('# Number of variables: %d' % self.num_var)
+        # print('# Number of equality constraints: %d' % num_eq_con)
+        # print('# Number of inequality constraints: %d' % num_ineq_con)
+        # print('----------------------------------------')
         pass
 
     def load_params(self, param, tuning_file=None):
@@ -320,9 +318,9 @@ class MPC(object):
         optvar = self.opt_var(sol['x'])
 
         solve_time += time.time()
-        print('MPC - CPU time: %f seconds  |  Cost: %f  |  Horizon length: %d ' % (solve_time, sol['f'], self.Nt))
+        #print('MPC - CPU time: %f seconds  |  Cost: %f  |  Horizon length: %d ' % (solve_time, sol['f'], self.Nt))
 
-        return optvar['x'], optvar['u']
+        return optvar['x'], optvar['u'], solve_time
 
     def mpc_controller(self, x0, t):
         """
@@ -338,12 +336,12 @@ class MPC(object):
             x_traj = self.model.get_trajectory(t, self.Nt + 1, self.fw_propagating)
             x_sp = x_traj.reshape(self.Nx * (self.Nt + 1), order='F')
             self.set_reference(x_sp)
-        _, u_pred = self.solve_mpc(x0)
+        _, u_pred, solve_time = self.solve_mpc(x0)
 
         # Calculate error to first state
         error = self.calculate_error(x0, self.x_sp[0:13])
 
-        return u_pred[0], error
+        return u_pred[0], error, solve_time
 
     def astrobee_sim_controller(self, x0, xh):
         """
