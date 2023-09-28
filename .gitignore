@@ -5,7 +5,7 @@ venv/
 VENV/
 
 # User specific settings
-**/user_settings.py
+# **/user_settings.py
 
 # Temporary files
 TMP/
