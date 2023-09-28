@@ -3,14 +3,15 @@ import numpy as np
 from astrobee import Astrobee
 from mpc import MPC
 from simulation import EmbeddedSimEnvironment
+import user_settings
 
 # TODO: Set the path to the trajectory file:
 #       eg.: trajectory_quat = '/home/roque/Project Assignment/Dataset/trajectory_quat.txt'
-trajectory_quat = ''
+trajectory_quat = user_settings.trajectory_quat
 
 # TODO: complete the 'tuning_file_path' variable to the path of your tuning.yaml
 #       eg.: tuning_file_path = '/home/roque/Project Assignment/tuning.yaml'
-tuning_file_path = ''
+tuning_file_path = user_settings.tuning_file_path
 
 # Q1
 # TODO: Set the Astrobee dynamics in Astrobee->astrobee_dynamics_quat
