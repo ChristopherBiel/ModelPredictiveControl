@@ -21,7 +21,7 @@ class MPC(object):
                  param='P1', N=10, trajectory_tracking=False,
                  ulb=None, uub=None, xlb=None, xub=None,
                  terminal_constraint=None, tuning_file=None,
-                 solver_opts=None):
+                 solver_opts=None, params=None):
         """
         Constructor for the MPC class.
 
@@ -70,7 +70,12 @@ class MPC(object):
         self.x_sp = None
 
         # Cost function weights
-        Q, R, P = self.load_params(param, tuning_file)
+        if tuning_file is not None:
+            Q, R, P = self.load_params(param, tuning_file)
+        else:
+            Q = params['Q']
+            R = params['R']
+            P = params['P']
 
         self.Q = ca.MX(Q)
         self.P = ca.MX(P)

@@ -32,7 +32,7 @@ class EmbeddedSimEnvironment(object):
         Run simulator with specified system dynamics and control function.
         """
 
-        print("Running simulation....")
+        # print("Running simulation....")
         sim_loop_length = int(self.total_sim_time / self.dt) + 1  # account for 0th
         t = np.array([0])
         st = np.array([0])
@@ -201,7 +201,7 @@ class EmbeddedSimEnvironment(object):
 
         plt.show()
 
-    def calcScore(self):
+    def calcScore(self, verbosity=True):
         """
         Calculate a performance score for a simulation.
         More is better!
@@ -239,13 +239,13 @@ class EmbeddedSimEnvironment(object):
         ss_a = np.mean(error[1,cvg_i:-1])
         score.append((0.05 - ss_p) * 100)
         score.append((10 - ss_a) * 1)
-
-        print("--------------------------- EVALUATION ---------------------------")
-        print("MaxCpT Penalty:                       %5.4fs ->    [  %5.4f   ]" % (max_ct, score[0]))
-        print("AvgCpT Score:                         %5.4fs -> [%5.4f /  0.500]" % (avg_ct, score[1]))
-        print("ConvT Score:   PosConv %5.2fs, AttConv %5.2fs -> [%5.4f /  3.500]" % (t[cvg_i1], t[cvg_i2], score[2]))
-        print("SdySt Pos Score:                 avg. %5.4fm -> [%5.4f /  5.000]" % (ss_p, score[3]))
-        print("SdySt Att Score:               avg. %4.4fdeg -> [%5.4f / 10.000]" % (ss_a, score[4]))
-        print(f"--------------------- Overall score: %.4f ---------------------" % (sum(score)))
+        if verbosity:
+            print("--------------------------- EVALUATION ---------------------------")
+            print("MaxCpT Penalty:                       %5.4fs ->    [  %5.4f   ]" % (max_ct, score[0]))
+            print("AvgCpT Score:                         %5.4fs -> [%5.4f /  0.500]" % (avg_ct, score[1]))
+            print("ConvT Score:   PosConv %5.2fs, AttConv %5.2fs -> [%5.4f /  3.500]" % (t[cvg_i1], t[cvg_i2], score[2]))
+            print("SdySt Pos Score:                 avg. %5.4fm -> [%5.4f /  5.000]" % (ss_p, score[3]))
+            print("SdySt Att Score:               avg. %4.4fdeg -> [%5.4f / 10.000]" % (ss_a, score[4]))
+            print(f"--------------------- Overall score: %.4f ---------------------" % (sum(score)))
 
         return sum(score)
