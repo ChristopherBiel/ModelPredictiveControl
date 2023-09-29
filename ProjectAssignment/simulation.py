@@ -241,10 +241,15 @@ class EmbeddedSimEnvironment(object):
         score.append(max((35.0 - cvg_t), 0.0) * 0.1)
 
         # Factor in steady-state errors
-        ss_p = np.mean(error[0,cvg_i:-1])
-        ss_a = np.mean(error[1,cvg_i:-1])
-        score.append((0.05 - ss_p) * 100)
-        score.append((10 - ss_a) * 1)
+        if cvg_v1.size != 0 and cvg_v2.size != 0:
+            ss_p = np.mean(error[0,cvg_i:-1])
+            ss_a = np.mean(error[1,cvg_i:-1])
+            score.append((0.05 - ss_p) * 100)
+            score.append((10 - ss_a) * 1)
+        else:
+            score.append(0)
+            score.append(0)
+            
         if verbosity:
             print("--------------------------- EVALUATION ---------------------------")
             print("MaxCpT Penalty:                       %5.4fs ->    [  %5.4f   ]" % (max_ct, score[0]))
