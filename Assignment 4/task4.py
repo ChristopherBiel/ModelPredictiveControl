@@ -8,7 +8,7 @@ from simulation import EmbeddedSimEnvironment
 from set_operations import SetOperations
 
 SET_TYPE = "LQR"  # Terminal invariant set type: select 'zero' or 'LQR'
-CASE_SELECTION = "translation"  # Select either "attitude", "translation", "simulate"
+CASE_SELECTION = "simulate"  # Select either "attitude", "translation", "simulate"
 
 # Create pendulum and controller objects
 abee = Astrobee()
@@ -17,8 +17,9 @@ abee = Astrobee()
 A, B, _, _ = abee.create_discrete_time_dynamics()
 
 # Solve the ARE for our system to extract the terminal weight matrix P
-Q = np.eye(12)
-R = np.eye(6)
+# Q = np.eye(12)
+Q = np.diag([201,201,201,101,101,101,201,201,201,101,101,101])
+R = np.eye(6)*10
 P_LQR = np.matrix(scipy.linalg.solve_discrete_are(A, B, Q, R))
 
 # Instantiate controller
@@ -149,3 +150,34 @@ sim_env.visualize()
 # Energy used:  156.19656928067673
 # Position integral error:  3.940477931866056
 # Attitude integral error:  0.9022227295843867
+
+
+# Q7a
+# ------- SIMULATION STATUS -------
+# Energy used:  58.68803377668803
+# Position integral error:  10.074272070293016
+# Attitude integral error:  0.9609220668055931
+
+# Q7b
+# ------- SIMULATION STATUS -------
+# Energy used:  30.88886194618935
+# Position integral error:  16.84354152640868
+# Attitude integral error:  1.1650700150374003
+
+# Q7c
+# ------- SIMULATION STATUS -------
+# Energy used:  19.84428568386086
+# Position integral error:  22.08263522220301
+# Attitude integral error:  7.0452705719937665
+
+# Q7d
+# ------- SIMULATION STATUS -------
+# Energy used:  108.34991897903646
+# Position integral error:  5.705486735415308
+# Attitude integral error:  0.4545913545122818
+
+# Q7e
+# ------- SIMULATION STATUS -------
+# Energy used:  122.15866686191089
+# Position integral error:  4.875238638569017
+# Attitude integral error:  0.6912721580887771
