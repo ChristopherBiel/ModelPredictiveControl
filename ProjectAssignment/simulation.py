@@ -236,6 +236,7 @@ class EmbeddedSimEnvironment(object):
             cvg_i = max(cvg_i1, cvg_i2)
             cvg_t = t[cvg_i]
         else: 
+            cvg_i = t.shape[0]
             cvg_t = t[-1]
         score.append(max((35.0 - cvg_t), 0.0) * 0.1)
 
