@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
     NUM_PROCESSES = 6
-    NUM_ITERATIONS = 40
+    NUM_ITERATIONS = 100
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
