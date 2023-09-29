@@ -14,7 +14,7 @@ def worker(tasksQ, resultsQ):
 
 def fullRunSimu(params):
     # Announce process
-    print('%s running simulation nr. %i with %f' % (mp.current_process().name, params['i'], params['Horizon']))
+    print('%s running simulation nr. %i with %i' % (mp.current_process().name, params['i'], params['Horizon']))
 
     # Initialise all necessary components
     abee = Astrobee(trajectory_file=params['trajectory_quat'])
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
     NUM_PROCESSES = 6
+    NUM_ITERATIONS = 40
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
@@ -58,23 +59,47 @@ if __name__ == '__main__':
     tasksQ = mp.Queue()
     resultsQ = mp.Queue()
 
+    processes = []
     # Start
     for i in range(NUM_PROCESSES):
-        mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
+        process = mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
+        processes.append(process)
 
-    for i in range(40):
+    maxScore = 0
+    for i in range(NUM_ITERATIONS):
+        # Check for new entries in the resultsQ
+        while not resultsQ.empty():
+            newScore = resultsQ.get()
+            if newScore > maxScore:
+                maxScore = newScore
+                print('New max. score: %.3f', maxScore)
+        # Assign new tasks only when there is just one left
         while tasksQ.qsize() > 2:
             time.sleep(1)
-        params['Horizon'] = np.random.randint(6,10)
+        # Randomly choose parameters
+        params['Horizon'] = np.random.randint(6,20)
         params['Q'] = np.diag(np.random.randint(1,300,12))
         params['R'] = np.diag(np.random.randint(1,100,6))
         params['P'] = params['Q'] * np.random.randint(10,100)
         params['i'] = i
+        # Publish task
         tasksQ.put(params)
+        # Sleep to make sure the task is published properly
         time.sleep(1)
 
+    # After 'all' tasks are  published, we wait and then publish 'STOP'
+    time.sleep(5)
     for i in range(NUM_PROCESSES):
         tasksQ.put('STOP')
+        time.sleep(1)
 
-    for i in range(20):
-        print('\t', resultsQ.get())
+    # Wait to close all the processes:
+    for process in processes:
+        processes.join()
+        
+    # Fetch the final results
+    while not resultsQ.empty():
+            newScore = resultsQ.get()
+            if newScore > maxScore:
+                maxScore = newScore
+                print('New max. score: %.3f', maxScore)
