@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import numpy as np
+import time
 
 from astrobee import Astrobee
 from mpc import MPC
@@ -68,6 +69,7 @@ if __name__ == '__main__':
         params['P'] = params['Q'] * np.random.randint(10,100)
         params['i'] = i
         tasksQ.put(params)
+        time.sleep(0.5)
 
     for i in range(NUM_PROCESSES):
         tasksQ.put('STOP')
