@@ -228,10 +228,15 @@ class EmbeddedSimEnvironment(object):
         error = np.zeros((2,e.shape[1]))
         for i in range(e.shape[1]):
             error[:,i] = np.array([np.linalg.norm(e[0:3,i]), np.rad2deg(np.linalg.norm(e[6:9,i]))])
-        cvg_i1 = np.where(error[0,:] < 0.05)[0][0]
-        cvg_i2 = np.where(error[1,:] < 10)[0][0]
-        cvg_i = max(cvg_i1, cvg_i2)
-        cvg_t = t[cvg_i]
+        cvg_v1 = np.where(error[0,:] < 0.05)[0]
+        cvg_v2 = np.where(error[1,:] < 10)[0]
+        if cvg_v1.size != 0 and cvg_v2.size != 0:
+            cvg_i1 = cvg_v1[0]
+            cvg_i2 = cvg_v2[0]
+            cvg_i = max(cvg_i1, cvg_i2)
+            cvg_t = t[cvg_i]
+        else: 
+            cvg_t = t[-1]
         score.append(max((35.0 - cvg_t), 0.0) * 0.1)
 
         # Factor in steady-state errors
