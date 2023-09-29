@@ -71,6 +71,7 @@ if __name__ == '__main__':
         params['P'] = params['Q'] * np.random.randint(10,100)
         params['i'] = i
         tasksQ.put(params)
+        time.sleep(1)
 
     for i in range(NUM_PROCESSES):
         tasksQ.put('STOP')
