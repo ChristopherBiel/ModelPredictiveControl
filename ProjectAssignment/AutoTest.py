@@ -63,13 +63,14 @@ if __name__ == '__main__':
         mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
 
     for i in range(40):
+        while tasksQ.qsize() > 2:
+            time.sleep(1)
         params['Horizon'] = np.random.randint(6,10)
         params['Q'] = np.diag(np.random.randint(1,300,12))
         params['R'] = np.diag(np.random.randint(1,100,6))
         params['P'] = params['Q'] * np.random.randint(10,100)
         params['i'] = i
         tasksQ.put(params)
-        time.sleep(0.5)
 
     for i in range(NUM_PROCESSES):
         tasksQ.put('STOP')
