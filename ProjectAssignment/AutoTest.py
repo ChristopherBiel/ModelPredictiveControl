@@ -41,7 +41,7 @@ def fullRunSimu(params):
 if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
-    NUM_PROCESSES = 4
+    NUM_PROCESSES = 6
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
@@ -61,11 +61,15 @@ if __name__ == '__main__':
     for i in range(NUM_PROCESSES):
         mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
 
-    tasksQ.put(params)
-    params['i'] = 2
-    tasksQ.put(params)
-    params['i'] = 3
-    tasksQ.put(params)
+    for i in range(40):
+        params['Horizon'] = np.random.randint(6,30)
+        params['Q'] = np.diag(np.random.randint(1,100,12))
+        params['R'] = np.diag(np.random.randint(1,100,6))
+        params['P'] = params['Q'] * np.random.randint(1,100)
+        tasksQ.put(params)
 
-    for score in iter(resultsQ.get, 'STOP'):
-        print(score)
+    for i in range(NUM_PROCESSES):
+        tasksQ.put('STOP')
+
+    for i in range(20):
+        print('\t', resultsQ.get())
