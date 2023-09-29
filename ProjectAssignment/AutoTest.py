@@ -13,7 +13,7 @@ def worker(tasksQ, resultsQ):
 
 def fullRunSimu(params):
     # Announce process
-    print('%s running simulation nr. %i' % (mp.current_process().name, params['i']))
+    print('%s running simulation nr. %i with %f' % (mp.current_process().name, params['i'], params['Horizon']))
 
     # Initialise all necessary components
     abee = Astrobee(trajectory_file=params['trajectory_quat'])
@@ -62,10 +62,11 @@ if __name__ == '__main__':
         mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
 
     for i in range(40):
-        params['Horizon'] = np.random.randint(6,30)
-        params['Q'] = np.diag(np.random.randint(1,100,12))
+        params['Horizon'] = np.random.randint(6,10)
+        params['Q'] = np.diag(np.random.randint(1,300,12))
         params['R'] = np.diag(np.random.randint(1,100,6))
-        params['P'] = params['Q'] * np.random.randint(1,100)
+        params['P'] = params['Q'] * np.random.randint(10,100)
+        params['i'] = i
         tasksQ.put(params)
 
     for i in range(NUM_PROCESSES):
