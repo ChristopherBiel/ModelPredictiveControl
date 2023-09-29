@@ -72,7 +72,7 @@ if __name__ == '__main__':
             newScore = resultsQ.get()
             if newScore > maxScore:
                 maxScore = newScore
-                print('New max. score: %.3f', maxScore)
+                print("New max. score: %.3f" % (maxScore))
         # Assign new tasks only when there is just one left
         while tasksQ.qsize() > 2:
             time.sleep(1)
@@ -96,10 +96,10 @@ if __name__ == '__main__':
     # Wait to close all the processes:
     for process in processes:
         processes.join()
-        
+
     # Fetch the final results
     while not resultsQ.empty():
             newScore = resultsQ.get()
             if newScore > maxScore:
                 maxScore = newScore
-                print('New max. score: %.3f', maxScore)
+                print("New max. score: %.3f" % (maxScore))
