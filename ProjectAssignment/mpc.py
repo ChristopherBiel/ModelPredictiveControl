@@ -73,9 +73,9 @@ class MPC(object):
         if tuning_file is not None:
             Q, R, P = self.load_params(param, tuning_file)
         else:
-            Q = params['Q']
-            R = params['R']
-            P = params['P']
+            Q = np.diag(params['Q'])
+            R = np.diag(params['R'])
+            P = Q * params['P']
 
         self.Q = ca.MX(Q)
         self.P = ca.MX(P)

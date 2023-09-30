@@ -42,18 +42,11 @@ def fullRunSimu(params):
 if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
-    NUM_PROCESSES = 12
+    NUM_PROCESSES = 7
     NUM_ITERATIONS = 10000
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
-
-    params['Horizon'] = 10
-    params['Q'] = np.diag(np.array([300, 300, 300, 10, 10, 10, 100, 100, 100, 10, 10, 10]))
-    params['R'] = np.diag(np.array([5, 5, 5, 50, 50, 50]))
-    params['P'] = params['Q'] * 100
-    
-    params['i'] = 1
 
     # Define MP setup:
     tasksQ = mp.Queue()
@@ -66,7 +59,7 @@ if __name__ == '__main__':
         process.start()
         processes.append(process)
 
-    maxScore = 0
+    maxScore = 10
     maxParams = {}
     for i in range(NUM_ITERATIONS):
         # Check for new entries in the resultsQ
@@ -82,9 +75,9 @@ if __name__ == '__main__':
             time.sleep(1)
         # Randomly choose parameters
         params['Horizon'] = np.random.randint(6,20)
-        params['Q'] = np.diag(np.random.randint(1,300,12))
-        params['R'] = np.diag(np.random.randint(1,100,6))
-        params['P'] = params['Q'] * np.random.randint(10,100)
+        params['Q'] = np.random.randint(1,300,12)
+        params['R'] = np.random.randint(1,100,6)
+        params['P'] = np.random.randint(10,100)
         params['i'] = i
         # Publish task
         tasksQ.put(params)
