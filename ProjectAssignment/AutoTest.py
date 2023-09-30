@@ -10,11 +10,11 @@ import user_settings
 def worker(tasksQ, resultsQ):
     for params in iter(tasksQ.get, 'STOP'):
         score = fullRunSimu(params)
-        resultsQ.put(score)
+        resultsQ.put((score, params))
 
 def fullRunSimu(params):
     # Announce process
-    print('%s running simulation nr. %i with %i' % (mp.current_process().name, params['i'], params['Horizon']))
+    # print('%s running simulation nr. %i with %i' % (mp.current_process().name, params['i'], params['Horizon']))
 
     # Initialise all necessary components
     abee = Astrobee(trajectory_file=params['trajectory_quat'])
@@ -42,8 +42,8 @@ def fullRunSimu(params):
 if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
-    NUM_PROCESSES = 6
-    NUM_ITERATIONS = 100
+    NUM_PROCESSES = 12
+    NUM_ITERATIONS = 10000
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
@@ -62,17 +62,21 @@ if __name__ == '__main__':
     processes = []
     # Start
     for i in range(NUM_PROCESSES):
-        process = mp.Process(target=worker, args=(tasksQ, resultsQ)).start()
+        process = mp.Process(target=worker, args=(tasksQ, resultsQ))
+        process.start()
         processes.append(process)
 
     maxScore = 0
+    maxParams = {}
     for i in range(NUM_ITERATIONS):
         # Check for new entries in the resultsQ
         while not resultsQ.empty():
-            newScore = resultsQ.get()
-            if newScore > maxScore:
-                maxScore = newScore
-                print("New max. score: %.3f" % (maxScore))
+            result = resultsQ.get()
+            if result[0] > maxScore:
+                maxScore = result[0]
+                maxParams = result[1]
+                print("New max. score: %.3f with parameters" % (maxScore))
+                print(maxParams)
         # Assign new tasks only when there is just one left
         while tasksQ.qsize() > 2:
             time.sleep(1)
@@ -95,11 +99,13 @@ if __name__ == '__main__':
 
     # Wait to close all the processes:
     for process in processes:
-        processes.join()
+        process.join()
 
     # Fetch the final results
     while not resultsQ.empty():
-            newScore = resultsQ.get()
-            if newScore > maxScore:
-                maxScore = newScore
-                print("New max. score: %.3f" % (maxScore))
+        result = resultsQ.get()
+        if result[0] > maxScore:
+            maxScore = result[0]
+            maxParams = result[1]
+            print("New max. score: %.3f with parameters:" % (maxScore))
+            print(maxParams)
