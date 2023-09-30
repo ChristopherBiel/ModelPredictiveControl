@@ -12,7 +12,7 @@ def worker(tasksQ, resultsQ):
         score = fullRunSimu(params)
         resultsQ.put((score, params))
 
-def fullRunSimu(params):
+def fullRunSimu(params, verbosity=False):
     # Announce process
     # print('%s running simulation nr. %i with %i' % (mp.current_process().name, params['i'], params['Horizon']))
 
@@ -36,7 +36,7 @@ def fullRunSimu(params):
 
     # Run configurations
     sim_env_tracking.run(x0)
-    score = sim_env_tracking.calcScore(verbosity=False)
+    score = sim_env_tracking.calcScore(verbosity=verbosity)
     return score
 
 if __name__ == '__main__':
@@ -102,3 +102,5 @@ if __name__ == '__main__':
             maxParams = result[1]
             print("New max. score: %.3f with parameters:" % (maxScore))
             print(maxParams)
+
+    fullRunSimu(maxParams, verbosity=True)
