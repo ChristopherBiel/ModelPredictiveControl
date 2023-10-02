@@ -9,6 +9,8 @@ import user_settings
 
 def worker(tasksQ, resultsQ):
     for params in iter(tasksQ.get, 'STOP'):
+        if np.mod(params['i'], 100) == 0:
+            print('Running parameter set nr. %i', params['i'])
         score = fullRunSimu(params)
         resultsQ.put((score, params))
 
@@ -43,7 +45,7 @@ if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
     NUM_PROCESSES = 7
-    NUM_ITERATIONS = 10000
+    NUM_ITERATIONS = 500
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
