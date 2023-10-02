@@ -85,8 +85,8 @@ if __name__ == '__main__':
             time.sleep(1)
         # Randomly choose parameters
         params['Horizon'] = 8
-        Q1 = np.ones(3) * np.random.randint(1,200)
-        Q2 = np.ones(3) * np.random.randint(1,200)
+        Q1 = np.random.randint(1,200,3)
+        Q2 = np.random.randint(1,200,3)
         Q3 = np.ones(3) * np.random.randint(1,50)
         Q4 = np.ones(3) * np.random.randint(1,50)
         params['Q'] = np.concatenate((Q1, Q2, Q3, Q4))
