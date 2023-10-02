@@ -236,7 +236,9 @@ class EmbeddedSimEnvironment(object):
             cvg_i = max(cvg_i1, cvg_i2)
             cvg_t = t[cvg_i]
         else: 
-            cvg_i = t.shape[0]
+            cvg_i1 = t.shape[0]-1
+            cvg_i2 = t.shape[0]-1
+            cvg_i = t.shape[0]-1
             cvg_t = t[-1]
         score.append(max((35.0 - cvg_t), 0.0) * 0.1)
 
@@ -247,9 +249,11 @@ class EmbeddedSimEnvironment(object):
             score.append((0.05 - ss_p) * 100)
             score.append((10 - ss_a) * 1)
         else:
+            ss_p = np.min(error[0,:])
+            ss_a = np.min(error[1,:])
             score.append(0)
             score.append(0)
-            
+
         if verbosity:
             print("--------------------------- EVALUATION ---------------------------")
             print("MaxCpT Penalty:                       %5.4fs ->    [  %5.4f   ]" % (max_ct, score[0]))

@@ -25,7 +25,7 @@ u_lim, x_lim = abee.get_limits()
 
 # Create MPC Solver
 # TODO: Select the parameter type with the argument param='P1'  - or 'P2', 'P3'
-MPC_HORIZON = 10
+MPC_HORIZON = 8
 # ctl = MPC(model=abee,
 #           dynamics=abee.model,
 #           param='P2',
@@ -61,7 +61,7 @@ sim_env_tracking = EmbeddedSimEnvironment(model=abee,
                                           dynamics=abee.model,
                                           controller=tracking_ctl.mpc_controller,
                                           time=80)
-# t, y, u = sim_env_tracking.run(x0)
+# t, y, u = sim_env_tracking.run(x0)A
 # sim_env_tracking.visualize()  # Visualize state propagation
 # sim_env_tracking.visualize_error()
 
@@ -72,5 +72,5 @@ sim_env_tracking = EmbeddedSimEnvironment(model=abee,
 tracking_ctl.set_forward_propagation()
 t, st, y, u, e = sim_env_tracking.run(x0)
 sim_env_tracking.calcScore()
-# sim_env_tracking.visualize()  # Visualize state propagation
+sim_env_tracking.visualize()  # Visualize state propagation
 # sim_env_tracking.visualize_error()

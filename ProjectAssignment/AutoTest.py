@@ -74,9 +74,13 @@ if __name__ == '__main__':
         while tasksQ.qsize() > 2:
             time.sleep(1)
         # Randomly choose parameters
-        params['Horizon'] = np.random.randint(6,20)
-        params['Q'] = np.random.randint(1,300,12)
-        params['R'] = np.random.randint(1,100,6)
+        params['Horizon'] = 8
+        Q1 = np.ones((3,1)) * np.random.randint(1,100)
+        Q2 = np.ones((3,1)) * np.random.randint(1,100)
+        Q3 = np.ones((4,1)) * np.random.randint(1,100)
+        Q4 = np.ones((3,1)) * np.random.randint(1,100)
+        params['Q'] = np.concatenate((Q1, Q2, Q3, Q4))
+        params['R'] = [1,1,1,1,1,1]
         params['P'] = np.random.randint(10,100)
         params['i'] = i
         # Publish task

@@ -134,24 +134,20 @@ class MPC(object):
             con_eq.append(x_t_next - opt_var['x', t + 1])
 
             # Input constraints
-            if uub is not None:
-                con_ineq.append(u_t)
-                con_ineq_ub.append(uub)
-                con_ineq_lb.append(np.full((self.Nu,), -ca.inf))
-            if ulb is not None:
-                con_ineq.append(u_t)
-                con_ineq_ub.append(np.full((self.Nu,), ca.inf))
-                con_ineq_lb.append(ulb)
+            con_ineq.append(u_t)
+            con_ineq_ub.append(uub)
+            con_ineq_lb.append(np.full((self.Nu,), -ca.inf))
+            con_ineq.append(u_t)
+            con_ineq_ub.append(np.full((self.Nu,), ca.inf))
+            con_ineq_lb.append(ulb)
 
             # State constraints
-            if xub is not None:
-                con_ineq.append(x_t)
-                con_ineq_ub.append(xub)
-                con_ineq_lb.append(np.full((self.Nx,), -ca.inf))
-            if xlb is not None:
-                con_ineq.append(x_t)
-                con_ineq_ub.append(np.full((self.Nx,), ca.inf))
-                con_ineq_lb.append(xlb)
+            con_ineq.append(x_t)
+            con_ineq_ub.append(xub)
+            con_ineq_lb.append(np.full((self.Nx,), -ca.inf))
+            con_ineq.append(x_t)
+            con_ineq_ub.append(np.full((self.Nx,), ca.inf))
+            con_ineq_lb.append(xlb)
 
             # Objective Function / Cost Function
             obj += self.running_cost(x_t, x_r, self.Q, u_t, self.R)
@@ -188,6 +184,8 @@ class MPC(object):
         nlp = dict(x=opt_var, f=obj, g=con, p=param_s)
         options = {
             'ipopt.print_level': 0,
+            'ipopt.max_iter': 25,
+            'ipopt.tol': 1e-10,
             'print_time': False,
             'verbose': False,
             'expand': True
@@ -282,7 +280,7 @@ class MPC(object):
         V = ca.mtimes(ca.mtimes(e_vec.T, P), e_vec)
         self.terminal_cost = ca.Function('V', [x, xr, P], [V])
 
-    def solve_mpc(self, x0, u0=None):
+    def solve_mpc(self, x0, u0=None, enableNoise=False):
         """
         Solve the optimal control problem
 
@@ -302,6 +300,11 @@ class MPC(object):
 
         # Initialize variables
         self.optvar_x0 = np.full((1, self.Nx), x0.T)
+        if enableNoise:
+            pos_noise = np.random.normal(0, 0.001, (1, self.Nx))
+            orientation_noise = np.random.normal(0, 0.001, (1, self.Nx))
+            noise = np.concatenate((np.random.normal(0, 0.001, (1, self.Nx))), axis=1)
+            self.optvar_x0 += noise
 
         # Initial guess of the warm start variables
         self.optvar_init = self.opt_var(0)
