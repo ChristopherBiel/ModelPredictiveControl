@@ -7,11 +7,21 @@ from mpc import MPC
 from simulation import EmbeddedSimEnvironment
 import user_settings
 
+NUM_PROCESSES = 1
+NUM_ITERATIONS = 2
+VERBOSITY_LVL = 2       #0: best perf in end, 1: every 100 steps + best perf,  2: everything
+
 def worker(tasksQ, resultsQ):
+    verbosity = False
+    if VERBOSITY_LVL == 2:
+        verbosity = True
     for params in iter(tasksQ.get, 'STOP'):
-        if np.mod(params['i'], 100) == 0:
-            print('Running parameter set nr. %i', params['i'])
-        score = fullRunSimu(params)
+        if np.mod(params['i'], 100) == 0 and VERBOSITY_LVL == 1:
+            print('Running parameter set nr. ', params['i'])
+        elif verbosity:
+            print('Running parameter set nr. ', params['i'])
+            print(params)
+        score = fullRunSimu(params, verbosity=verbosity)
         resultsQ.put((score, params))
 
 def fullRunSimu(params, verbosity=False):
@@ -44,8 +54,6 @@ def fullRunSimu(params, verbosity=False):
 if __name__ == '__main__':
     # Parameters are saved in a dictionary
     params = {}
-    NUM_PROCESSES = 7
-    NUM_ITERATIONS = 500
 
     # Define paths:
     params['trajectory_quat'] = user_settings.trajectory_quat
@@ -67,20 +75,20 @@ if __name__ == '__main__':
         # Check for new entries in the resultsQ
         while not resultsQ.empty():
             result = resultsQ.get()
-            if result[0] > maxScore:
+            if result[0] > maxScore and VERBOSITY_LVL > 0:
                 maxScore = result[0]
                 maxParams = result[1]
                 print("New max. score: %.3f with parameters" % (maxScore))
                 print(maxParams)
         # Assign new tasks only when there is just one left
-        while tasksQ.qsize() > 2:
+        while not tasksQ.empty():
             time.sleep(1)
         # Randomly choose parameters
         params['Horizon'] = 8
-        Q1 = np.ones((3,1)) * np.random.randint(1,100)
-        Q2 = np.ones((3,1)) * np.random.randint(1,100)
-        Q3 = np.ones((4,1)) * np.random.randint(1,100)
-        Q4 = np.ones((3,1)) * np.random.randint(1,100)
+        Q1 = np.ones(3) * np.random.randint(1,200)
+        Q2 = np.ones(3) * np.random.randint(1,200)
+        Q3 = np.ones(3) * np.random.randint(1,50)
+        Q4 = np.ones(3) * np.random.randint(1,50)
         params['Q'] = np.concatenate((Q1, Q2, Q3, Q4))
         params['R'] = [1,1,1,1,1,1]
         params['P'] = np.random.randint(10,100)
