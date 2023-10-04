@@ -1,9 +1,12 @@
 import numpy as np
+import yaml
 
 from astrobee import Astrobee
 from mpc import MPC
 from simulation import EmbeddedSimEnvironment
 import user_settings
+
+PARAMETER_FILE = 'P1'
 
 # TODO: Set the path to the trajectory file:
 #       eg.: trajectory_quat = '/home/roque/Project Assignment/Dataset/trajectory_quat.txt'
@@ -26,11 +29,13 @@ u_lim, x_lim = abee.get_limits()
 # Create MPC Solver
 # TODO: Select the parameter type with the argument param='P1'  - or 'P2', 'P3'
 MPC_HORIZON = 8
-solver_opts = {
+with open(tuning_file_path, 'r') as stream:
+    parameters = yaml.safe_load(stream)
+    solver_opts = {
         'ipopt.print_level': 0,
-        'ipopt.max_iter': 15,
-        'ipopt.tol': 1e-10,
-}
+        'ipopt.max_iter': parameters[PARAMETER_FILE]['max_iter'],
+        'ipopt.tol': parameters[PARAMETER_FILE]['tol'],
+    }
 # ctl = MPC(model=abee,
 #           dynamics=abee.model,
 #           param='P2',
@@ -56,7 +61,7 @@ x0 = abee.get_initial_pose()
 # TODO: complete the MPC class for reference tracking
 tracking_ctl = MPC(model=abee,
                    dynamics=abee.model,
-                   param='P2',
+                   param=PARAMETER_FILE,
                    N=MPC_HORIZON,
                    trajectory_tracking=True,
                    ulb=-u_lim, uub=u_lim,
@@ -78,5 +83,5 @@ sim_env_tracking = EmbeddedSimEnvironment(model=abee,
 tracking_ctl.set_forward_propagation()
 t, st, y, u, e = sim_env_tracking.run(x0)
 sim_env_tracking.calcScore()
-sim_env_tracking.visualize()  # Visualize state propagation
-# sim_env_tracking.visualize_error()
+# sim_env_tracking.visualize()  # Visualize state propagation
+sim_env_tracking.visualize_error()
