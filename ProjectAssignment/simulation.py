@@ -1,7 +1,10 @@
 import numpy as np
 import casadi as ca
 import matplotlib.pyplot as plt
-import time
+from scipy.spatial.transform import Rotation as Rot
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 class EmbeddedSimEnvironment(object):
@@ -39,12 +42,13 @@ class EmbeddedSimEnvironment(object):
         x_vec = np.array([x0]).reshape(self.model.n, 1)
         u_vec = np.empty((6, 0))
         e_vec = np.empty((12, 0))
+        t_vec = np.empty((13, 0))
 
         for i in range(sim_loop_length):
 
             # Get control input and obtain next state
             x = x_vec[:, -1].reshape(self.model.n, 1)
-            u, error, solve_time = self.controller(x, i * self.dt)
+            u, error, solve_time, traj = self.controller(x, i * self.dt)
             x_next = self.dynamics(x, u)
             x_next[6:10] = x_next[6:10] / ca.norm_2(x_next[6:10])
 
@@ -54,16 +58,19 @@ class EmbeddedSimEnvironment(object):
             x_vec = np.append(x_vec, np.array(x_next).reshape(self.model.n, 1), axis=1)
             u_vec = np.append(u_vec, np.array(u).reshape(self.model.m, 1), axis=1)
             e_vec = np.append(e_vec, error.reshape(12, 1), axis=1)
+            t_vec = np.append(t_vec, np.array(traj).reshape(self.model.n, 1), axis=1)
 
-        _, error, solve_time = self.controller(x_next, i * self.dt)
+        _, error, solve_time, traj = self.controller(x_next, i * self.dt)
         st = np.append(st, solve_time)
         e_vec = np.append(e_vec, error.reshape(12, 1), axis=1)
+        t_vec = np.append(t_vec, np.array(traj).reshape(self.model.n, 1), axis=1)
 
         self.t = t
         self.st = st
         self.x_vec = x_vec
         self.u_vec = u_vec
         self.e_vec = e_vec
+        self.t_vec = t_vec
         self.sim_loop_length = sim_loop_length
         return t, st, x_vec, u_vec, e_vec
 
@@ -264,3 +271,136 @@ class EmbeddedSimEnvironment(object):
             print(f"--------------------- Overall score: %.4f ---------------------" % (sum(score)))
 
         return sum(score)
+    
+    def r_mat(self, q):
+        '''
+        Calculate a rotational matrix from a quaternion q = [q_i, q_j, q_k, q_w]
+        '''
+        
+        R = np.eye(3)
+        v_skew = np.array([[0, -1*q[2], q[1]],[q[2], 0, -1*q[0]],[-1*q[1], q[0], 0]])
+        R = R + 2*q[3]*v_skew + 2*np.power(v_skew,2)
+        print('Current R Matrix')
+        print(R)
+        return R
+
+    def plot3DTrajectory(self):
+        '''
+        Create a 3D scatter plot to visualize the trajectory of the Astrobee.
+        '''
+
+        # Create the figure and add a 3d axis
+        fig = plt.figure(figsize=(8,8))
+        ax = fig.add_subplot(111, projection='3d')
+        arrow_length = 0.02
+
+        # Extract the individual states
+        main_pos = self.x_vec[0:3, :]
+        main_quat = self.x_vec[6:10, :]
+
+        trgt_pos = self.t_vec[0:3, :]
+        trgt_quat = self.t_vec[6:10, :]
+
+        # Plot the data
+        ax.scatter(main_pos[0,::10], main_pos[1,::10], main_pos[2,::10], s=3, c='b', marker='o', label='Astrobee')
+        ax.scatter(trgt_pos[0,::10], trgt_pos[1,::10], trgt_pos[2,::10], s=3, c='g', marker='.', label='Bumble')
+        indices = np.arange(0, main_pos.shape[1],10)
+        for i in indices:
+            # Calculate the vector in global coordinates using the R-matrix
+            R = Rot.from_quat(main_quat[:,i])
+            vector = R.apply(np.array([arrow_length, 0, 0]))
+            q = ax.quiver(main_pos[0,i], main_pos[1,i], main_pos[2,i], vector[0], vector[1], vector[2], color='red', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+            vector = R.apply(np.array([0, arrow_length, 0]))
+            q = ax.quiver(main_pos[0,i], main_pos[1,i], main_pos[2,i], vector[0], vector[1], vector[2], color='green', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+            vector = R.apply(np.array([0, 0, arrow_length]))
+            q = ax.quiver(main_pos[0,i], main_pos[1,i], main_pos[2,i], vector[0], vector[1], vector[2], color='blue', pivot='tail', arrow_length_ratio=0.001, linewidth=0.5)
+        # ax.axis('equal')
+        
+        # Set axis labels
+        ax.set_xlabel('X position [m]')
+        ax.set_ylabel('Y position [m]')
+        ax.set_zlabel('Z position [m]')
+        ax.set_title('Astrobee position and orientation in the global coordinate frame')
+        
+        # Add a legend
+        ax.legend()
+
+        # Show the 3D plot
+        plt.show()
+
+
+    def plot3DTrajectoryWithBoxes(self):
+        '''
+        Create a 3D scatter plot to visualize the trajectory of the Astrobee with a BOX! WOOW
+        '''
+
+        # Create the figure and add a 3d axis
+        fig = plt.figure(figsize=(8,8))
+        ax = fig.add_subplot(111, projection='3d')
+        cube_size_meters = 0.31 # Astrobee seize according to NASA
+
+        # Extract the individual states
+        main_pos = self.x_vec[0:3, :]
+        main_quat = self.x_vec[6:10, :]
+
+        trgt_pos = self.t_vec[0:3, :]
+
+        indices = np.arange(0, main_pos.shape[1],10)
+        # Loop through the data and add cubic markers with rotations
+        for i in indices:
+            # Create a cubic marker with the specified size
+            vertices = np.array([
+                [-cube_size_meters / 2, -cube_size_meters / 2, -cube_size_meters / 2],
+                [-cube_size_meters / 2, -cube_size_meters / 2, cube_size_meters / 2],
+                [-cube_size_meters / 2, cube_size_meters / 2, -cube_size_meters / 2],
+                [-cube_size_meters / 2, cube_size_meters / 2, cube_size_meters / 2],
+                [cube_size_meters / 2, -cube_size_meters / 2, -cube_size_meters / 2],
+                [cube_size_meters / 2, -cube_size_meters / 2, cube_size_meters / 2],
+                [cube_size_meters / 2, cube_size_meters / 2, -cube_size_meters / 2],
+                [cube_size_meters / 2, cube_size_meters / 2, cube_size_meters / 2]
+            ])
+
+            # Apply the rotation to the vertices using the rotation matrix
+            R = Rot.from_quat(main_quat[:,i])
+            rotated_vertices = R.apply(vertices)
+
+            # Add the position offset
+            rotated_vertices += [main_pos[0,i], main_pos[1,i], main_pos[2,i]]
+
+            # Define the vertices for the faces of the cube based on the rotated vertices
+            cube_faces = [
+                [rotated_vertices[0], rotated_vertices[1], rotated_vertices[5], rotated_vertices[4]],
+                [rotated_vertices[2], rotated_vertices[3], rotated_vertices[7], rotated_vertices[6]],
+                [rotated_vertices[0], rotated_vertices[1], rotated_vertices[3], rotated_vertices[2]],
+                [rotated_vertices[4], rotated_vertices[5], rotated_vertices[7], rotated_vertices[6]],
+                [rotated_vertices[0], rotated_vertices[2], rotated_vertices[6], rotated_vertices[4]],
+                [rotated_vertices[1], rotated_vertices[3], rotated_vertices[7], rotated_vertices[5]]
+            ]
+
+            # Create a Poly3DCollection for the cubic marker
+            cube = Poly3DCollection(cube_faces, color='blue', linewidths=1, edgecolors='k', alpha=0.5)
+            ax.add_collection3d(cube)
+        
+        # Calculate the limits for the axis
+        x_min = min(main_pos[0,:])
+        x_max = max(main_pos[0,:])
+        y_min = min(main_pos[1,:])
+        y_max = max(main_pos[1,:])
+        z_min = min(main_pos[2,:])
+        z_max = max(main_pos[2,:])
+        axis_scale = max([x_max-x_min, y_max-y_min, z_max-z_min])
+        # Set the axis limits
+        ax.set_xlim(x_min + (x_max-x_min)/2 - axis_scale/2 - cube_size_meters, x_min + (x_max-x_min)/2 + axis_scale/2 + cube_size_meters)
+        ax.set_ylim(y_min + (y_max-y_min)/2 - axis_scale/2 - cube_size_meters, y_min + (y_max-y_min)/2 + axis_scale/2 + cube_size_meters)
+        ax.set_zlim(z_min + (z_max-z_min)/2 - axis_scale/2 - cube_size_meters, z_min + (z_max-z_min)/2 + axis_scale/2 + cube_size_meters)
+        print(f"Test123 {x_min} {x_max} {(x_max-x_min)/2 - axis_scale/2 - cube_size_meters} {(x_max-x_min)/2 + axis_scale/2 + cube_size_meters}")
+
+        # Set axis labels
+        ax.set_xlabel('X position [m]')
+        ax.set_ylabel('Y position [m]')
+        ax.set_zlabel('Z position [m]')
+        ax.set_title('Astrobee position and orientation in the global coordinate frame')
+
+        # Show the 3D plot
+        plt.grid(True)
+        plt.show()
