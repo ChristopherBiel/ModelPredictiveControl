@@ -26,6 +26,11 @@ u_lim, x_lim = abee.get_limits()
 # Create MPC Solver
 # TODO: Select the parameter type with the argument param='P1'  - or 'P2', 'P3'
 MPC_HORIZON = 8
+solver_opts = {
+        'ipopt.print_level': 0,
+        'ipopt.max_iter': 15,
+        'ipopt.tol': 1e-10,
+}
 # ctl = MPC(model=abee,
 #           dynamics=abee.model,
 #           param='P2',
@@ -51,12 +56,13 @@ x0 = abee.get_initial_pose()
 # TODO: complete the MPC class for reference tracking
 tracking_ctl = MPC(model=abee,
                    dynamics=abee.model,
-                   param='P3',
+                   param='P2',
                    N=MPC_HORIZON,
                    trajectory_tracking=True,
                    ulb=-u_lim, uub=u_lim,
                    xlb=-x_lim, xub=x_lim,
-                   tuning_file=tuning_file_path)
+                   tuning_file=tuning_file_path,
+                   solver_opts=solver_opts)
 sim_env_tracking = EmbeddedSimEnvironment(model=abee,
                                           dynamics=abee.model,
                                           controller=tracking_ctl.mpc_controller,
