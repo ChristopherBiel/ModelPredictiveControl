@@ -21,7 +21,7 @@ class MPC(object):
                  param='P1', N=10, trajectory_tracking=False,
                  ulb=None, uub=None, xlb=None, xub=None,
                  terminal_constraint=None, tuning_file=None,
-                 solver_opts=None):
+                 solver_opts=None, params=None):
         """
         Constructor for the MPC class.
 
@@ -62,7 +62,7 @@ class MPC(object):
         self.dt = model.dt
         self.Nx, self.Nu = model.n, model.m
         self.Nt = N
-        print("Horizon steps: ", N * self.dt)
+        # print("Horizon steps: ", N * self.dt)
         self.dynamics = dynamics
 
         # Initialize variables
@@ -70,7 +70,12 @@ class MPC(object):
         self.x_sp = None
 
         # Cost function weights
-        Q, R, P = self.load_params(param, tuning_file)
+        if tuning_file is not None:
+            Q, R, P = self.load_params(param, tuning_file)
+        else:
+            Q = np.diag(params['Q'])
+            R = np.diag(params['R'])
+            P = Q * params['P']
 
         self.Q = ca.MX(Q)
         self.P = ca.MX(P)
@@ -88,8 +93,7 @@ class MPC(object):
         # Starting state parameters - add slack here
         x0 = ca.MX.sym('x0', self.Nx)
         if self.trajectory_tracking:
-            # TODO: remove 'raise NotImplementedError' and create the desired symbolic param
-            raise NotImplementedError
+            x_ref = ca.MX.sym('x_ref', self.Nx*(self.Nt+1))
         else:
             x_ref = ca.MX.sym('x_ref', self.Nx,)
         u0 = ca.MX.sym('u0', self.Nu)
@@ -120,8 +124,7 @@ class MPC(object):
             # Get variables
             x_t = opt_var['x', t]
             if self.trajectory_tracking:
-                # TODO: remove 'raise NotImplementedError' and obtain the desired step in the reference trajectory
-                raise NotImplementedError
+                x_r = x_ref[t*13:(t+1)*13]
             else:
                 x_r = x_ref
             u_t = opt_var['u', t]
@@ -131,24 +134,20 @@ class MPC(object):
             con_eq.append(x_t_next - opt_var['x', t + 1])
 
             # Input constraints
-            if uub is not None:
-                con_ineq.append(u_t)
-                con_ineq_ub.append(uub)
-                con_ineq_lb.append(np.full((self.Nu,), -ca.inf))
-            if ulb is not None:
-                con_ineq.append(u_t)
-                con_ineq_ub.append(np.full((self.Nu,), ca.inf))
-                con_ineq_lb.append(ulb)
+            con_ineq.append(u_t)
+            con_ineq_ub.append(uub)
+            con_ineq_lb.append(np.full((self.Nu,), -ca.inf))
+            con_ineq.append(u_t)
+            con_ineq_ub.append(np.full((self.Nu,), ca.inf))
+            con_ineq_lb.append(ulb)
 
             # State constraints
-            if xub is not None:
-                con_ineq.append(x_t)
-                con_ineq_ub.append(xub)
-                con_ineq_lb.append(np.full((self.Nx,), -ca.inf))
-            if xlb is not None:
-                con_ineq.append(x_t)
-                con_ineq_ub.append(np.full((self.Nx,), ca.inf))
-                con_ineq_lb.append(xlb)
+            con_ineq.append(x_t)
+            con_ineq_ub.append(xub)
+            con_ineq_lb.append(np.full((self.Nx,), -ca.inf))
+            con_ineq.append(x_t)
+            con_ineq_ub.append(np.full((self.Nx,), ca.inf))
+            con_ineq_lb.append(xlb)
 
             # Objective Function / Cost Function
             obj += self.running_cost(x_t, x_r, self.Q, u_t, self.R)
@@ -185,6 +184,8 @@ class MPC(object):
         nlp = dict(x=opt_var, f=obj, g=con, p=param_s)
         options = {
             'ipopt.print_level': 0,
+            'ipopt.max_iter': 25,
+            'ipopt.tol': 1e-10,
             'print_time': False,
             'verbose': False,
             'expand': True
@@ -194,12 +195,12 @@ class MPC(object):
         self.solver = ca.nlpsol('mpc_solver', 'ipopt', nlp, options)
 
         build_solver_time += time.time()
-        print('\n________________________________________')
-        print('# Time to build mpc solver: %f sec' % build_solver_time)
-        print('# Number of variables: %d' % self.num_var)
-        print('# Number of equality constraints: %d' % num_eq_con)
-        print('# Number of inequality constraints: %d' % num_ineq_con)
-        print('----------------------------------------')
+        # print('\n________________________________________')
+        # print('# Time to build mpc solver: %f sec' % build_solver_time)
+        # print('# Number of variables: %d' % self.num_var)
+        # print('# Number of equality constraints: %d' % num_eq_con)
+        # print('# Number of inequality constraints: %d' % num_ineq_con)
+        # print('----------------------------------------')
         pass
 
     def load_params(self, param, tuning_file=None):
@@ -279,7 +280,7 @@ class MPC(object):
         V = ca.mtimes(ca.mtimes(e_vec.T, P), e_vec)
         self.terminal_cost = ca.Function('V', [x, xr, P], [V])
 
-    def solve_mpc(self, x0, u0=None):
+    def solve_mpc(self, x0, u0=None, enableNoise=False):
         """
         Solve the optimal control problem
 
@@ -299,6 +300,11 @@ class MPC(object):
 
         # Initialize variables
         self.optvar_x0 = np.full((1, self.Nx), x0.T)
+        if enableNoise:
+            pos_noise = np.random.normal(0, 0.001, (1, self.Nx))
+            orientation_noise = np.random.normal(0, 0.001, (1, self.Nx))
+            noise = np.concatenate((np.random.normal(0, 0.001, (1, self.Nx))), axis=1)
+            self.optvar_x0 += noise
 
         # Initial guess of the warm start variables
         self.optvar_init = self.opt_var(0)
@@ -320,9 +326,9 @@ class MPC(object):
         optvar = self.opt_var(sol['x'])
 
         solve_time += time.time()
-        print('MPC - CPU time: %f seconds  |  Cost: %f  |  Horizon length: %d ' % (solve_time, sol['f'], self.Nt))
+        #print('MPC - CPU time: %f seconds  |  Cost: %f  |  Horizon length: %d ' % (solve_time, sol['f'], self.Nt))
 
-        return optvar['x'], optvar['u']
+        return optvar['x'], optvar['u'], solve_time
 
     def mpc_controller(self, x0, t):
         """
@@ -338,12 +344,12 @@ class MPC(object):
             x_traj = self.model.get_trajectory(t, self.Nt + 1, self.fw_propagating)
             x_sp = x_traj.reshape(self.Nx * (self.Nt + 1), order='F')
             self.set_reference(x_sp)
-        _, u_pred = self.solve_mpc(x0)
+        _, u_pred, solve_time = self.solve_mpc(x0)
 
         # Calculate error to first state
         error = self.calculate_error(x0, self.x_sp[0:13])
 
-        return u_pred[0], error
+        return u_pred[0], error, solve_time
 
     def astrobee_sim_controller(self, x0, xh):
         """

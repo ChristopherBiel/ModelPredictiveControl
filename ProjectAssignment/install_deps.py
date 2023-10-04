@@ -15,7 +15,7 @@ if __name__ == "__main__":
     install("control")
     install("filterpy")
     install("polytope")
-    install("yaml")
+    install("pyyaml")
 
     try:
         import matplotlib
