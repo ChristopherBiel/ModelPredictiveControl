@@ -81,10 +81,11 @@ class Astrobee(object):
         tau = u[3:]
 
         # Model
-        pdot = ca.MX.zeros(3, 1)
-        vdot = ca.MX.zeros(3, 1)
-        qdot = ca.MX.zeros(4, 1)
-        wdot = ca.MX.zeros(3, 1)
+        pdot = v
+        vdot = ca.mtimes(r_mat_q(q), f) / self.mass
+        qdot = ca.mtimes(xi_mat(q), w) / 2
+        wdot = ca.mtimes(ca.inv(self.inertia), tau - ca.mtimes(skew(w),
+                         ca.mtimes(self.inertia, w)))
 
         dxdt = [pdot, vdot, qdot, wdot]
 
@@ -134,7 +135,31 @@ class Astrobee(object):
         x_r = np.zeros((self.n, npoints))
 
         # TODO: do the forward propagation of the measured state x_s for npoints.
-
+        # Ensure the input has the right dimensions!
+        # The implementation in get_trajectory provides this function
+        # With x_s in shape (13,) while the test provides it as (12,1)
+        if x_s.ndim == 2 and x_s.shape[1] == 1:
+            x_s = x_s.ravel()
+            print(f"Adjusted shape to {x_s.shape}")
+        
+        # State extraction
+        p = x_s[0:3]
+        v = x_s[3:6]
+        q = x_s[6:10]
+        w = x_s[10:]
+        # Calculate the reference position for the t=0 entry
+        p_r = p + r_mat_q_np(q)[:,0]*radius
+        x_r[:,0] = np.concatenate((p_r, v, q, w), axis=0)
+    
+        for t in range(npoints-1):
+            # Forward propagate honeys movement
+            p += v * self.dt
+            q += np.dot(xi_mat_np(q),w) * self.dt / 2
+            q = q / np.linalg.norm(q)
+            # Calculate the reference position
+            p_r = p + r_mat_q_np(q)[:,0]*radius
+            # Fill x_r
+            x_r[:,t+1] = np.concatenate((p_r, v, q, w), axis=0)
         return x_r
 
     def get_trajectory(self, t, npoints, forward_propagation=False):
@@ -149,8 +174,12 @@ class Astrobee(object):
         """
 
         if t == 0.0:
+            # Load the trajectory from the txt file
             tmp = np.loadtxt(self.trajectory_file, ndmin=2)
             self.trajectory = tmp.reshape((self.n, int(tmp.shape[0] / self.n)), order="F")
+            # Trajectory is of shape 13x14715 with the max. values of
+            # [ 11 -7  4.8  0.00068 0.00054  0.0012  0.718  0.784 
+            # 0.65  1  0.0548  0.0365 0.0067]
 
         if forward_propagation is False:
             id_s = int(round(t / self.dt))

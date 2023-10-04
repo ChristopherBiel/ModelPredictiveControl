@@ -32,9 +32,10 @@ class EmbeddedSimEnvironment(object):
         Run simulator with specified system dynamics and control function.
         """
 
-        print("Running simulation....")
+        # print("Running simulation....")
         sim_loop_length = int(self.total_sim_time / self.dt) + 1  # account for 0th
         t = np.array([0])
+        st = np.array([0])
         x_vec = np.array([x0]).reshape(self.model.n, 1)
         u_vec = np.empty((6, 0))
         e_vec = np.empty((12, 0))
@@ -43,25 +44,28 @@ class EmbeddedSimEnvironment(object):
 
             # Get control input and obtain next state
             x = x_vec[:, -1].reshape(self.model.n, 1)
-            u, error = self.controller(x, i * self.dt)
+            u, error, solve_time = self.controller(x, i * self.dt)
             x_next = self.dynamics(x, u)
             x_next[6:10] = x_next[6:10] / ca.norm_2(x_next[6:10])
 
             # Store data
             t = np.append(t, t[-1] + self.dt)
+            st = np.append(st, solve_time)
             x_vec = np.append(x_vec, np.array(x_next).reshape(self.model.n, 1), axis=1)
             u_vec = np.append(u_vec, np.array(u).reshape(self.model.m, 1), axis=1)
             e_vec = np.append(e_vec, error.reshape(12, 1), axis=1)
 
-        _, error = self.controller(x_next, i * self.dt)
+        _, error, solve_time = self.controller(x_next, i * self.dt)
+        st = np.append(st, solve_time)
         e_vec = np.append(e_vec, error.reshape(12, 1), axis=1)
 
         self.t = t
+        self.st = st
         self.x_vec = x_vec
         self.u_vec = u_vec
         self.e_vec = e_vec
         self.sim_loop_length = sim_loop_length
-        return t, x_vec, u_vec
+        return t, st, x_vec, u_vec, e_vec
 
     def visualize(self):
         """
@@ -196,3 +200,67 @@ class EmbeddedSimEnvironment(object):
         ax6.grid()
 
         plt.show()
+
+    def calcScore(self, verbosity=True):
+        """
+        Calculate a performance score for a simulation.
+        More is better!
+        """
+        score = []
+
+        st = self.st
+        t  = self.t
+        e = self.e_vec
+
+
+        # Maximum computational time
+        max_ct = np.max(st)
+        score.append(-1*max(round((max_ct - 0.1) * 100, 3), 0.0) * 0.1)
+
+        # Average score
+        avg_ct = np.average(st)
+        if avg_ct > 0.1:
+            score.append((0.1 - avg_ct) * 30)
+        else:
+            score.append(max((0.1 - avg_ct), 0.0) * 5)
+
+        # Convergence time
+        error = np.zeros((2,e.shape[1]))
+        for i in range(e.shape[1]):
+            error[:,i] = np.array([np.linalg.norm(e[0:3,i]), np.rad2deg(np.linalg.norm(e[6:9,i]))])
+        cvg_v1 = np.where(error[0,:] < 0.05)[0]
+        cvg_v2 = np.where(error[1,:] < 10)[0]
+        if cvg_v1.size != 0 and cvg_v2.size != 0:
+            cvg_i1 = cvg_v1[0]
+            cvg_i2 = cvg_v2[0]
+            cvg_i = max(cvg_i1, cvg_i2)
+            cvg_t = t[cvg_i]
+        else: 
+            cvg_i1 = t.shape[0]-1
+            cvg_i2 = t.shape[0]-1
+            cvg_i = t.shape[0]-1
+            cvg_t = t[-1]
+        score.append(max((35.0 - cvg_t), 0.0) * 0.1)
+
+        # Factor in steady-state errors
+        if cvg_v1.size != 0 and cvg_v2.size != 0:
+            ss_p = np.mean(error[0,cvg_i:-1])
+            ss_a = np.mean(error[1,cvg_i:-1])
+            score.append((0.05 - ss_p) * 100)
+            score.append((10 - ss_a) * 1)
+        else:
+            ss_p = np.min(error[0,:])
+            ss_a = np.min(error[1,:])
+            score.append(0)
+            score.append(0)
+
+        if verbosity:
+            print("--------------------------- EVALUATION ---------------------------")
+            print("MaxCpT Penalty:                       %5.4fs ->    [  %5.4f   ]" % (max_ct, score[0]))
+            print("AvgCpT Score:                         %5.4fs -> [%5.4f /  0.500]" % (avg_ct, score[1]))
+            print("ConvT Score:   PosConv %5.2fs, AttConv %5.2fs -> [%5.4f /  3.500]" % (t[cvg_i1], t[cvg_i2], score[2]))
+            print("SdySt Pos Score:                 avg. %5.4fm -> [%5.4f /  5.000]" % (ss_p, score[3]))
+            print("SdySt Att Score:               avg. %4.4fdeg -> [%5.4f / 10.000]" % (ss_a, score[4]))
+            print(f"--------------------- Overall score: %.4f ---------------------" % (sum(score)))
+
+        return sum(score)
