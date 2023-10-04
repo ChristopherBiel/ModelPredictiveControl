@@ -6,7 +6,7 @@ from mpc import MPC
 from simulation import EmbeddedSimEnvironment
 import user_settings
 
-PARAMETER_FILE = 'P1'
+PARAMETER_FILE = 'P2'
 
 # TODO: Set the path to the trajectory file:
 #       eg.: trajectory_quat = '/home/roque/Project Assignment/Dataset/trajectory_quat.txt'
@@ -83,5 +83,7 @@ sim_env_tracking = EmbeddedSimEnvironment(model=abee,
 tracking_ctl.set_forward_propagation()
 t, st, y, u, e = sim_env_tracking.run(x0)
 sim_env_tracking.calcScore()
-# sim_env_tracking.visualize()  # Visualize state propagation
+sim_env_tracking.visualize()  # Visualize state propagation
 sim_env_tracking.visualize_error()
+sim_env_tracking.plot3DTrajectory()
+sim_env_tracking.plot3DTrajectoryWithBoxes()

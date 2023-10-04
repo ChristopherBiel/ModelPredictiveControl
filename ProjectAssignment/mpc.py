@@ -349,7 +349,7 @@ class MPC(object):
         # Calculate error to first state
         error = self.calculate_error(x0, self.x_sp[0:13])
 
-        return u_pred[0], error, solve_time
+        return u_pred[0], error, solve_time, x_traj[:,0]
 
     def astrobee_sim_controller(self, x0, xh):
         """

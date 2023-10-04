@@ -201,8 +201,8 @@ class Astrobee(object):
         :rtype: np.ndarray
         """
         x0 = np.zeros((self.n, 1))
-        x0[0] = 11.0
-        x0[1] = -7.5
+        x0[0] = 13.0
+        x0[1] = -9.5
         x0[2] = 5.2
         x0[8] = 1.0
 
