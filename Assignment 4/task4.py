@@ -17,8 +17,9 @@ abee = Astrobee()
 A, B, _, _ = abee.create_discrete_time_dynamics()
 
 # Solve the ARE for our system to extract the terminal weight matrix P
-Q = np.eye(12)
-R = np.eye(6) * 0.01
+# Q = np.eye(12)
+Q = np.diag([201,201,201,101,101,101,201,201,201,101,101,101])
+R = np.eye(6)*10
 P_LQR = np.matrix(scipy.linalg.solve_discrete_are(A, B, Q, R))
 
 # Instantiate controller
@@ -50,8 +51,9 @@ set_ops_a = SetOperations(Aa, Ba, Qa, Ra, xlb=-x_lim_a, xub=x_lim_a)
 # TODO: For Q1, change N=10 to the different values of N and inv_set_type to "LQR" or "zero"
 if CASE_SELECTION == "translation":
     # Q1
-    KN_XN, all_sets, _ = set_ops_t.getNstepControllableSet(uub=u_lim_t, ulb=-u_lim_t, N=10, inv_set_type=SET_TYPE)
+    KN_XN, all_sets, _ = set_ops_t.getNstepControllableSet(uub=u_lim_t, ulb=-u_lim_t, N=0, inv_set_type=SET_TYPE)
     set_ops_t.plotNsets(all_sets, plot_type=CASE_SELECTION)
+    exit()
 
     # Q2
     kns_u, _, _ = set_ops_t.getNstepControllableSet(uub=u_lim_t, ulb=-u_lim_t, N=5, inv_set_type=SET_TYPE)
@@ -62,7 +64,7 @@ if CASE_SELECTION == "translation":
 
 elif CASE_SELECTION == "attitude":
     # Q1
-    KN_XN, all_sets, _ = set_ops_a.getNstepControllableSet(uub=u_lim_a, ulb=-u_lim_a, N=10, inv_set_type=SET_TYPE)
+    KN_XN, all_sets, _ = set_ops_a.getNstepControllableSet(uub=u_lim_a, ulb=-u_lim_a, N=5, inv_set_type=SET_TYPE)
     set_ops_a.plotNsets(all_sets, plot_type=CASE_SELECTION)
 
     # Q2
@@ -124,3 +126,58 @@ sim_env = EmbeddedSimEnvironment(model=abee,
                                  time=20)
 t, y, u = sim_env.run(x0)
 sim_env.visualize()
+
+# For 3*u_lim
+# ------- SIMULATION STATUS -------
+# Energy used:  160.5115814942202
+# Position integral error:  3.557055497956232
+# Attitude integral error:  0.8817391354665436
+
+# For normal u_lim
+# ------- SIMULATION STATUS -------
+# Energy used:  156.19659284181895
+# Position integral error:  3.940477508608523
+# Attitude integral error:  0.902222799618031
+
+# With zero set and N=50
+# ------- SIMULATION STATUS -------
+# Energy used:  156.20415899721388
+# Position integral error:  3.9408366157207033
+# Attitude integral error:  0.9021317936698655
+
+# With zero set and N=200
+# ------- SIMULATION STATUS -------
+# Energy used:  156.19656928067673
+# Position integral error:  3.940477931866056
+# Attitude integral error:  0.9022227295843867
+
+
+# Q7a
+# ------- SIMULATION STATUS -------
+# Energy used:  58.68803377668803
+# Position integral error:  10.074272070293016
+# Attitude integral error:  0.9609220668055931
+
+# Q7b
+# ------- SIMULATION STATUS -------
+# Energy used:  30.88886194618935
+# Position integral error:  16.84354152640868
+# Attitude integral error:  1.1650700150374003
+
+# Q7c
+# ------- SIMULATION STATUS -------
+# Energy used:  19.84428568386086
+# Position integral error:  22.08263522220301
+# Attitude integral error:  7.0452705719937665
+
+# Q7d
+# ------- SIMULATION STATUS -------
+# Energy used:  108.34991897903646
+# Position integral error:  5.705486735415308
+# Attitude integral error:  0.4545913545122818
+
+# Q7e
+# ------- SIMULATION STATUS -------
+# Energy used:  122.15866686191089
+# Position integral error:  4.875238638569017
+# Attitude integral error:  0.6912721580887771

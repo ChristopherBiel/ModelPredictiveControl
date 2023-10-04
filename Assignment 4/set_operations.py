@@ -215,13 +215,13 @@ class SetOperations(object):
         :param set_dict: [description], defaults to {}
         :type set_dict: dict, optional
         """
-        fig, ax = plt.subplots(1)
+        fig, ax = plt.subplots(1, figsize=(6,6))
         ax.set_title("Invariant Sets and Control Bounds")
         dict_keys = list(set_dict.keys())
         dict_keys.reverse()
         for key in dict_keys:
             Kni = set_dict[key]
-            Kni.project([1, 2]).plot(ax=ax, alpha=1, linestyle="-", linewidth=0.3)
+            Kni.project([1, 4]).plot(ax=ax, alpha=1, linestyle="-", linewidth=0.3)
         if not plotU:
             dict_keys.reverse()
             ax.set_title("N-step Invariant Sets")
@@ -230,14 +230,15 @@ class SetOperations(object):
         ax.legend(dict_keys)
         if plot_type == "translation":
             ax.set_xlabel("Position X [m]")
-            ax.set_ylabel("Position Y [m]")
-            ax.set_xlim(-1.5, 1.5)
-            ax.set_ylim(-.15, .15)
+            ax.set_ylabel("Velocity X [m/s]")
+            ax.set_xlim(-1.2, 1.2)
+            ax.set_ylim(-.5, .5)
         elif plot_type == "attitude":
             ax.set_xlabel("Roll [rad]")
-            ax.set_ylabel("Pitch [rad]")
+            ax.set_ylabel("Roll rate [rad/s]")
             ax.set_xlim(-.25, .25)
             ax.set_ylim(-.25, .25)
+        ax.grid()
         plt.show()
 
 
