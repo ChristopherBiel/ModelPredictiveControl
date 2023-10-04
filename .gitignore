@@ -24,3 +24,6 @@ TEMP/
 
 # MAC OS specific files
 **/.DS_Store
+
+# Zip files
+**/*.zip

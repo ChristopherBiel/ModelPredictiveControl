@@ -99,8 +99,8 @@ class EmbeddedSimEnvironment(object):
         print("Position integral error: ", np.sum(np.abs(x_vec[0:3, :])))
         print("Attitude integral error: ", np.sum(np.abs(x_vec[6:9, :])))
 
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
-        fig2, (ax5, ax6) = plt.subplots(2)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(10,8))
+        fig2, (ax5, ax6) = plt.subplots(2, figsize=(6,6))
         ax1.clear()
         ax1.set_title("Astrobee States")
         ax1.plot(t, x_vec[0, :], 'r--',
