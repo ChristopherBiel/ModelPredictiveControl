@@ -4,6 +4,10 @@ env/
 venv/
 VENV/
 
+# User specific settings
+**/user_settings.py
+ProjectAssignment/user_settings.py
+
 # Temporary files
 TMP/
 tmp/
@@ -20,3 +24,6 @@ TEMP/
 
 # MAC OS specific files
 **/.DS_Store
+
+# Zip files
+**/*.zip
